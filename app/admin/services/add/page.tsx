@@ -22,6 +22,7 @@ export default function AddPage() {
         max_usage: parseInt(MaxUsage) || 0,
         price: parseInt(Price) || 0,
       })
+      
 
       const url = `${process.env.NEXT_PUBLIC_BASE_URL}/services`
       const response = await fetch(url, {
