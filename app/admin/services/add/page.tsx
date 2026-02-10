@@ -2,7 +2,7 @@
 
 import { getCookies } from "@/helper/cookies"
 import { useRouter } from "next/dist/client/components/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function AddPage() {
   const [ServiceName, setServiceName] = useState("")
@@ -13,6 +13,16 @@ export default function AddPage() {
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
+
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        router.push('/admin/services')
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [showSuccess, router])
+
   async function handleAddService(e: React.FormEvent) {
     e.preventDefault()
     try {
@@ -155,7 +165,6 @@ export default function AddPage() {
             </div>
             <h2 className="text-2xl font-bold text-pink-700 mb-2">Service Added! 🎉</h2>
             <p className="text-gray-600">Your new service has been created successfully.</p>
-            router.push('/admin/services')
           </div>
         </div>
       )}
