@@ -64,7 +64,7 @@ export default async function EditServicePage(probs: PageProps) {
     }
 
     return (
-        <div className="w-full p-5">
+        <div className="w-full">
             {/**show editable form for service data */}
             <FormService service={selectedService} />
         </div>

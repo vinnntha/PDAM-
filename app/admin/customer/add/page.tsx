@@ -40,7 +40,7 @@ export default async function AddPage() {
   const services = await getAllServices()
 
   return (
-    <div className="w-full p-5">
+    <div className="w-full">
       <FormService services={services} />
     </div>
   )

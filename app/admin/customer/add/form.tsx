@@ -3,6 +3,21 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getCookies } from "@/helper/cookies"
+import { 
+  User, 
+  Key, 
+  Fingerprint, 
+  Phone, 
+  MapPin, 
+  Layout, 
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Save,
+  ShieldCheck,
+  ChevronDown
+} from "lucide-react"
 
 export default function AddCustomer({ services }: any) {
   const [username, setUsername] = useState("")
@@ -13,216 +28,415 @@ export default function AddCustomer({ services }: any) {
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
 
+  const [isLoading, setIsLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
 
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/customers`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "app-key": process.env.NEXT_PUBLIC_APP_KEY || "",
-            "Authorization": `Bearer ${await getCookies("token")}`
-          },
-          body: JSON.stringify({
-            username,
-            password,
-            customer_number: customerNumber,
-            address,
-            service_id: Number(serviceId),
-            name,
-            phone,
-          }),
-        }
-      )
+      const request = JSON.stringify({
+        username,
+        password,
+        customer_number: customerNumber,
+        address,
+        service_id: parseInt(serviceId),
+        name,
+        phone,
+      })
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/customers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "app-key": process.env.NEXT_PUBLIC_APP_KEY || "",
+          "authorization": `Bearer ${await getCookies("token")}`,
+        },
+        body: request,
+      })
 
       if (!response.ok) {
         const err = await response.json()
         setErrorMessage(err.message || "Failed to add customer")
         setShowError(true)
+        setIsLoading(false)
         return
       }
 
       setShowSuccess(true)
-
+      setIsLoading(false)
       setTimeout(() => {
-        setShowSuccess(false);
-        router.push('/admin/customer')
+        setShowSuccess(false)
+        router.push("/admin/customer")
       }, 2000)
-
     } catch (error) {
-      setErrorMessage("Something went wrong")
+      setErrorMessage("Something went wrong. Please check your connection.")
       setShowError(true)
+      setIsLoading(false)
     }
   }
 
-  return (
-    <div
-      className="w-full min-h-dvh 
-      bg-linear-to-br from-pink-100 via-rose-100 to-pink-200
-      flex items-center justify-center p-6"
-    >
-      <div
-        className="relative w-full max-w-lg 
-        bg-white/70 backdrop-blur-xl
-        rounded-2xl shadow-xl border border-white/40
-        p-8"
-      >
-        <div className="absolute -top-16 -right-16 w-48 h-48 
-            bg-pink-300/40 rounded-full blur-3xl"></div>
+  const inputStyle = (fieldName: string) => ({
+    width: "100%",
+    backgroundColor: focusedField === fieldName ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+    border: focusedField === fieldName ? "1px solid rgba(56,189,248,0.5)" : "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "16px",
+    padding: "16px 20px",
+    color: "#fff",
+    fontSize: "15px",
+    fontWeight: 500,
+    outline: "none",
+    transition: "all 0.3s ease",
+    boxShadow: focusedField === fieldName ? "0 0 20px rgba(56,189,248,0.1)" : "none",
+  });
 
-        <div className="relative">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-pink-700">
-              Add New Customer
+  const labelStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontSize: "13px",
+    fontWeight: 700,
+    color: "rgba(255,255,255,0.5)",
+    marginBottom: "10px",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.05em",
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh", backgroundColor: "#0a0f1e", color: "#fff",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "40px 24px", position: "relative", overflow: "hidden",
+    }}>
+      {/* Background Orbs */}
+      <div style={{
+        position: "absolute", width: "600px", height: "600px", borderRadius: "50%",
+        top: "-150px", left: "-150px",
+        background: "rgba(56,189,248,0.07)", filter: "blur(120px)", pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", width: "500px", height: "500px", borderRadius: "50%",
+        bottom: "-100px", right: "-100px",
+        background: "rgba(16,185,129,0.05)", filter: "blur(100px)", pointerEvents: "none",
+      }} />
+
+      <div style={{ width: "100%", maxWidth: "800px", position: "relative", zIndex: 10 }}>
+        {/* Navigation */}
+        <button
+          onClick={() => router.back()}
+          style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            background: "none", border: "none", color: "rgba(255,255,255,0.4)",
+            cursor: "pointer", marginBottom: "32px", fontSize: "14px", fontWeight: 600,
+            transition: "color 0.2s",
+          }}
+          onMouseOver={(e) => e.currentTarget.style.color = "#38bdf8"}
+          onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
+        >
+          <div style={{
+            width: "36px", height: "36px", borderRadius: "10px",
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <ArrowLeft size={18} strokeWidth={2.5} />
+          </div>
+          Return to Customer List
+        </button>
+
+        {/* Form Container */}
+        <div style={{
+          backgroundColor: "rgba(255,255,255,0.02)",
+          backdropFilter: "blur(24px)",
+          borderRadius: "32px",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+          overflow: "hidden",
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "48px 48px 32px",
+            textAlign: "center" as const,
+            borderBottom: "1px solid rgba(255,255,255,0.05)",
+            position: "relative",
+          }}>
+            <div style={{
+              width: "64px", height: "64px", borderRadius: "20px",
+              background: "linear-gradient(135deg, rgba(56,189,248,0.2), rgba(16,185,129,0.2))",
+              border: "1px solid rgba(56,189,248,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 24px",
+              boxShadow: "0 10px 30px rgba(56,189,248,0.2)",
+            }}>
+              <ShieldCheck size={32} style={{ color: "#38bdf8" }} />
+            </div>
+            <h1 style={{ fontSize: "32px", fontWeight: 900, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
+              Register <span style={{ color: "#38bdf8" }}>New Customer</span>
             </h1>
-            <p className="text-sm text-gray-600 mt-2">
-              Fill customer details below
+            <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+              Complete the profile information to initiate a new service connection.
             </p>
           </div>
 
-          <form onSubmit={handleAddCustomer} className="space-y-6">
+          {/* Form */}
+          <form onSubmit={handleAddCustomer} style={{ padding: "48px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "32px", marginBottom: "32px" }}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <label style={labelStyle}>
+                  <User size={14} style={{ color: "#38bdf8" }} />
+                  Full Name
+                </label>
+                <input
+                  type="text" required value={name}
+                  onFocus={() => setFocusedField("name")} onBlur={() => setFocusedField(null)}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter full legal name"
+                  style={inputStyle("name")}
+                />
+              </div>
 
-            <Input
-              label="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              icon={<svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
-            />
-            <Input
-              label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              icon={<svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a4 4 0 01-8 0M15 7a4 4 0 00-8 0m11.39 4.61A7.5 7.5 0 0012 4.5a7.5 7.5 0 00-4.39 13.11" /></svg>}
-            />
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              icon={<svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
-            />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <label style={labelStyle}>
+                  <Fingerprint size={14} style={{ color: "#10b981" }} />
+                  National ID (NIK)
+                </label>
+                <input
+                  type="text" required value={customerNumber}
+                  onFocus={() => setFocusedField("nik")} onBlur={() => setFocusedField(null)}
+                  onChange={(e) => setCustomerNumber(e.target.value)}
+                  placeholder="16-digit identity number"
+                  style={inputStyle("nik")}
+                />
+              </div>
 
-            <Input
-              label="Customer Number (NIK)"
-              value={customerNumber}
-              onChange={(e) => setCustomerNumber(e.target.value)}
-              icon={<svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>}
-            />
-            <Input
-              label="Phone Number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              icon={<svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>}
-            />
-            <Input
-              label="Address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              icon={<svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
-            />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <label style={labelStyle}>
+                   <User size={14} style={{ color: "#38bdf8" }} />
+                   Username
+                </label>
+                <input
+                  type="text" required value={username}
+                  onFocus={() => setFocusedField("username")} onBlur={() => setFocusedField(null)}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Account identifier"
+                  style={inputStyle("username")}
+                />
+              </div>
 
-            <div className="flex flex-col gap-2 text-sm">
-              <label className="text-gray-700 font-medium">Service</label>
-              <select
-                value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl
-                bg-white/90 border border-pink-200
-                focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400
-                text-gray-800 transition-all duration-200"
-              >
-                <option value="">Select Service</option>
-                {services?.map((service: any) => (
-                  <option key={service.id} value={service.id}>
-                    {service.name}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <label style={labelStyle}>
+                  <Key size={14} style={{ color: "#10b981" }} />
+                  Password
+                </label>
+                <input
+                  type="password" required value={password}
+                  onFocus={() => setFocusedField("password")} onBlur={() => setFocusedField(null)}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Secure credentials"
+                  style={inputStyle("password")}
+                />
+              </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl
-              bg-linear-to-r from-pink-500 to-rose-500
-              text-white font-semibold text-lg
-              hover:opacity-90 active:scale-[0.98]
-              transition shadow-lg"
-            >
-              Save Customer
-            </button>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "32px", marginBottom: "32px" }}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <label style={labelStyle}>
+                   <Phone size={14} style={{ color: "#38bdf8" }} />
+                   Phone Number
+                </label>
+                <input
+                  type="text" required value={phone}
+                  onFocus={() => setFocusedField("phone")} onBlur={() => setFocusedField(null)}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+62 8xx..."
+                  style={inputStyle("phone")}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <label style={labelStyle}>
+                  <Layout size={14} style={{ color: "#10b981" }} />
+                  Service Plan
+                </label>
+                <div style={{ position: "relative" }}>
+                  <select
+                    required value={serviceId}
+                    onFocus={() => setFocusedField("service")} onBlur={() => setFocusedField(null)}
+                    onChange={(e) => setServiceId(e.target.value)}
+                    style={{
+                      ...inputStyle("service"),
+                      appearance: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="" style={{ backgroundColor: "#1e293b" }}>Select assigned plan</option>
+                    {services?.map((service: any) => (
+                      <option key={service.id} value={service.id} style={{ backgroundColor: "#1e293b" }}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={18} style={{
+                    position: "absolute", right: "20px", top: "50%",
+                    transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)",
+                    pointerEvents: "none"
+                  }} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", marginBottom: "40px" }}>
+              <label style={labelStyle}>
+                <MapPin size={14} style={{ color: "#10b981" }} />
+                Detailed Address
+              </label>
+              <textarea
+                required rows={3} value={address}
+                onFocus={() => setFocusedField("address")} onBlur={() => setFocusedField(null)}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Full residential or property address"
+                style={{
+                  ...inputStyle("address"),
+                  resize: "none",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "16px" }}>
+               <button
+                  type="submit"
+                  disabled={isLoading}
+                  style={{
+                    flex: 1.5,
+                    padding: "18px",
+                    borderRadius: "18px",
+                    background: "linear-gradient(135deg, #0891b2, #10b981)",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: "16px",
+                    fontWeight: 800,
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "12px",
+                    boxShadow: "0 10px 25px rgba(8,145,178,0.3)",
+                    transition: "all 0.3s ease",
+                  }}
+                  onMouseOver={(e) => {
+                    if(!isLoading) {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 15px 30px rgba(8,145,178,0.4)";
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = "none";
+                    e.currentTarget.style.boxShadow = "0 10px 25px rgba(8,145,178,0.3)";
+                  }}
+                >
+                  {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+                  {isLoading ? "PROVISIONING..." : "REGISTER CUSTOMER"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => router.push("/admin/customer")}
+                  style={{
+                    flex: 1,
+                    padding: "18px",
+                    borderRadius: "18px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
+                >
+                  CANCEL
+                </button>
+            </div>
           </form>
         </div>
       </div>
 
       {/* Success Modal */}
       {showSuccess && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 text-center max-w-sm mx-4 animate-bounce">
-            <h2 className="text-2xl font-bold text-pink-700 mb-2">
-              Customer Added! 🎉
-            </h2>
-            <p className="text-gray-600">
-              New customer created successfully.
+        <div style={{
+          position: "fixed", inset: 0, backgroundColor: "rgba(10,15,30,0.85)",
+          backdropFilter: "blur(18px)", display: "flex", alignItems: "center",
+          justifyContent: "center", zIndex: 1000, padding: "24px"
+        }}>
+          <div style={{
+             backgroundColor: "#0f172a", border: "1px solid rgba(16,185,129,0.3)",
+             borderRadius: "32px", padding: "40px", maxWidth: "420px", width: "100%",
+             textAlign: "center", boxShadow: "0 25px 60px rgba(0,0,0,0.5)"
+          }}>
+            <div style={{
+              width: "80px", height: "80px", borderRadius: "50%",
+              background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 24px"
+            }}>
+              <CheckCircle2 size={40} style={{ color: "#10b981" }} />
+            </div>
+            <h2 style={{ fontSize: "28px", fontWeight: 900, marginBottom: "12px" }}>Registration Complete</h2>
+            <p style={{ color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: "32px" }}>
+              New customer has been successfully integrated. Access will be granted shortly.
             </p>
+            <div style={{ width: "100%", height: "4px", backgroundColor: "rgba(255,255,255,0.05)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{
+                height: "100%", backgroundColor: "#10b981", borderRadius: "2px",
+                width: "100%", animation: "progress 2s linear forwards"
+              }} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Error Modal */}
+      {/* Error Overlay */}
       {showError && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 text-center max-w-sm mx-4">
-            <h2 className="text-2xl font-bold text-red-700 mb-2">
-              Failed to Add Customer
-            </h2>
-            <p className="text-gray-600">{errorMessage}</p>
+        <div style={{
+          position: "fixed", inset: 0, backgroundColor: "rgba(10,15,30,0.7)",
+          backdropFilter: "blur(10px)", display: "flex", alignItems: "center",
+          justifyContent: "center", zIndex: 1000, padding: "24px"
+        }}>
+          <div style={{
+             backgroundColor: "#1e1b1e", border: "1px solid rgba(239,68,68,0.3)",
+             borderRadius: "28px", padding: "32px", maxWidth: "400px", width: "100%",
+             textAlign: "center"
+          }}>
+            <XCircle size={48} style={{ color: "#ef4444", margin: "0 auto 20px" }} />
+            <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "12px" }}>Action Interrupted</h2>
+            <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: "24px", lineHeight: 1.5 }}>{errorMessage}</p>
             <button
               onClick={() => setShowError(false)}
-              className="mt-4 px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+              style={{
+                width: "100%", padding: "14px", borderRadius: "14px",
+                background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+                color: "#ef4444", fontWeight: 700, cursor: "pointer"
+              }}
             >
-              Try Again
+              CLOSE AND REVIEW
             </button>
           </div>
         </div>
       )}
-    </div>
-  )
-}
 
-function Input({
-  label,
-  icon,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  label: string
-  icon?: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2 text-sm">
-      <label className="text-gray-700 font-medium">{label}</label>
-      <div className="relative">
-        {icon && (
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-            {icon}
-          </div>
-        )}
-        <input
-          {...props}
-          className={`w-full px-4 py-3 rounded-xl
-          bg-white/90 border border-pink-200
-          focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400
-          text-gray-800 transition-all duration-200
-          ${icon ? 'pl-12' : 'pl-4'}`}
-        />
-      </div>
+      <style>{`
+        @keyframes progress {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+      `}</style>
     </div>
   )
 }

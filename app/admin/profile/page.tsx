@@ -1,172 +1,333 @@
-import { getCookies } from "@/helper/cookies"
+import { getCookies } from "@/helper/cookies";
+import Link from "next/link";
+import { Shield, User, Phone, Calendar, Activity, Users, FileText, Droplet } from "lucide-react";
 
 export interface ResponAdminProfile {
-  success: boolean
-  message: string
-  data: Admin
+  success: boolean;
+  message: string;
+  data: Admin;
 }
 
 export interface Admin {
-  id: number
-  user_id: number
-  name: string
-  phone: string
-  owner_token: string
-  createdAt: string
-  updatedAt: string
-  user: User
+  id: number;
+  user_id: number;
+  name: string;
+  phone: string;
+  owner_token: string;
+  createdAt: string;
+  updatedAt: string;
+  user: UserProfile;
 }
 
-export interface User {
-  id: number
-  username: string
-  password: string
-  role: string
-  owner_token: string
-  createdAt: string
-  updatedAt: string
+export interface UserProfile {
+  id: number;
+  username: string;
+  password: string;
+  role: string;
+  owner_token: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Create a fuction to grab data admin profile form BE
-
-async function getCustomerProfile(): Promise<Admin | null> {
+async function getAdminProfile(): Promise<Admin | null> {
   try {
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/admins/me`
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/admins/me`;
+    const appKey = (process.env.NEXT_PUBLIC_APP_KEY || "").trim();
+    const token = await getCookies("token");
+
     const response = await fetch(url, {
       method: "GET",
-      cache: `no-store`,
+      cache: "no-store",
       headers: {
-        "APP-KEY": process.env.NEXT_PUBLIC_APP_KEY || "",
-        "Authorization": `Bearer ${await getCookies("token")}`
-      }
-    })
+        "app-key": appKey,
+        "Authorization": `Bearer ${token}`,
+      },
+    });
 
-    const responseData: ResponAdminProfile = await response.json()
-    if (!response.ok) return null
+    console.log(`Admin Profile Fetch Status: ${response.status}`);
+    const responseData: ResponAdminProfile = await response.json();
+    
+    if (!response.ok) {
+      console.log("Admin Profile Fetch Failed:", responseData.message);
+      return null;
+    }
+    if (!response.ok) return null;
 
-    return responseData.data
+    return responseData.data;
   } catch (error) {
-    console.log(error)
-    return null
+    console.log(error);
+    return null;
   }
 }
 
-export default async function CustomerProfilePage() {
-  const customerProfile = await getCustomerProfile()
+export default async function AdminProfilePage() {
+  const adminProfile = await getAdminProfile();
 
-  if (customerProfile == null) {
+  if (adminProfile == null) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="bg-slate-900/80 backdrop-blur-xl p-6 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.15)] border border-cyan-500/30 text-center">
-          <h2 className="text-lg font-semibold text-slate-200">
-            You are not logged in
+      <div style={{
+        minHeight: "100vh", width: "100%",
+        backgroundColor: "#0a0f1e",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "24px", position: "relative",
+      }}>
+        <div style={{
+          background: "rgba(255,255,255,0.03)",
+          backdropFilter: "blur(20px)",
+          padding: "40px", borderRadius: "24px",
+          border: "1px solid rgba(255,255,255,0.1)",
+          textAlign: "center", maxWidth: "400px",
+        }}>
+          <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#38bdf8", marginBottom: "12px" }}>
+            Session Expired
           </h2>
-          <p className="text-sm text-slate-400 mt-2">
-            Please sign in to view your profile
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", marginBottom: "24px" }}>
+            Please sign in again to access your administrator profile.
           </p>
+          <Link href="/sign-in" style={{
+            display: "inline-block", padding: "12px 24px",
+            background: "#38bdf8", color: "#0a0f1e",
+            borderRadius: "12px", fontWeight: 700, textDecoration: "none",
+          }}>
+            Back to Sign In
+          </Link>
         </div>
       </div>
-    )
+    );
   }
 
+  const joinDate = new Date(adminProfile.createdAt).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+
   return (
-    <div className="w-full min-h-screen bg-slate-950 flex justify-center p-6">
-      <div className="relative w-full max-w-2xl bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-[0_0_30px_rgba(6,182,212,0.15)] border border-cyan-500/20 p-8 overflow-hidden">
+    <div style={{
+      minHeight: "100vh", width: "100%",
+      backgroundColor: "#0a0f1e",
+      padding: "60px 24px", position: "relative", overflow: "hidden",
+    }}>
+      {/* ── Background Effects ── */}
+      <div style={{
+        position: "absolute", width: "600px", height: "600px",
+        borderRadius: "50%", top: "-200px", left: "-200px",
+        background: "rgba(56,189,248,0.15)", filter: "blur(120px)",
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", width: "500px", height: "500px",
+        borderRadius: "50%", bottom: "-150px", right: "-150px",
+        background: "rgba(74,222,128,0.1)", filter: "blur(100px)",
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.03,
+        backgroundImage: `linear-gradient(#00e5ff 1px, transparent 1px),
+          linear-gradient(90deg, #00e5ff 1px, transparent 1px)`,
+        backgroundSize: "80px 80px",
+      }} />
 
-        {/* Decorative blur */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-600/20 rounded-full blur-[80px]"></div>
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-600/20 rounded-full blur-[80px]"></div>
-
-        <div className="relative z-10">
-          {/* Header */}
-          <div className="flex flex-col items-center text-center border-b border-cyan-900/50 pb-8">
-            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500/50">
-              <svg className="w-10 h-10 text-emerald-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-
-            <span className="inline-block mt-1 px-4 py-2 text-sm rounded-full bg-cyan-950/50 border border-cyan-500/50 text-cyan-400 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)] tracking-wider">
-              {customerProfile.user.role.toUpperCase()}
-            </span>
-
-            <h1 className="mt-4 text-3xl font-bold text-slate-100 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
-              {customerProfile.name}
+      <div style={{ maxWidth: "1000px", margin: "0 auto", position: "relative", zIndex: 10 }}>
+        
+        {/* ── Header ── */}
+        <div style={{ marginBottom: "40px", display: "flex", alignItems: "flex-end", gap: "24px" }}>
+          <div style={{
+            width: "100px", height: "100px", borderRadius: "24px",
+            background: "rgba(56,189,248,0.1)",
+            border: "1px solid rgba(56,189,248,0.25)",
+            boxShadow: "0 0 32px rgba(56,189,248,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Shield size={48} style={{
+              color: "#38bdf8",
+              filter: "drop-shadow(0 0 12px rgba(56,189,248,0.8))",
+            }} />
+          </div>
+          <div>
+            <h1 style={{
+              fontSize: "36px", fontWeight: 900, color: "#ffffff",
+              margin: 0, letterSpacing: "-0.02em",
+            }}>
+              {adminProfile.name}
             </h1>
-
-            <span className="mt-2 text-sm px-4 py-2 rounded-full bg-emerald-950/40 text-emerald-400 font-medium border border-emerald-500/30">
-              Administrator
-            </span>
-          </div>
-
-          {/* Info */}
-          <div className="mt-8 space-y-6">
-            <div className="flex justify-between items-center bg-slate-800/50 p-6 rounded-2xl border border-cyan-900/50 hover:border-cyan-500/50 transition-colors duration-300 shadow-inner overflow-hidden relative group">
-              <div className="absolute inset-0 bg-linear-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-              <div className="flex items-center space-x-3 relative z-10">
-                <svg className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_5px_rgba(6,182,212,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-slate-400 font-medium">Username</span>
-              </div>
-              <span className="font-bold text-slate-200 text-lg relative z-10">
-                {customerProfile.user.username}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
+              <span style={{
+                padding: "4px 12px", borderRadius: "8px",
+                background: "rgba(74,222,128,0.1)",
+                border: "1px solid rgba(74,222,128,0.3)",
+                color: "#4ade80", fontSize: "12px", fontWeight: 800,
+                textTransform: "uppercase", letterSpacing: "0.05em",
+              }}>
+                {adminProfile?.user?.role || "ADMIN"}
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px" }}>
+                Administrator Profile
               </span>
             </div>
-
-            <div className="flex justify-between items-center bg-slate-800/50 p-6 rounded-2xl border border-cyan-900/50 hover:border-cyan-500/50 transition-colors duration-300 shadow-inner relative group overflow-hidden">
-              <div className="absolute inset-0 bg-linear-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-              <div className="flex items-center space-x-3 relative z-10">
-                <svg className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_5px_rgba(6,182,212,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <span className="text-slate-400 font-medium">Phone</span>
-              </div>
-              <span className="font-bold text-slate-200 text-lg relative z-10">
-                {customerProfile.phone}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center bg-slate-800/50 p-6 rounded-2xl border border-cyan-900/50 hover:border-cyan-500/50 transition-colors duration-300 shadow-inner relative group overflow-hidden">
-              <div className="absolute inset-0 bg-linear-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-              <div className="flex items-center space-x-3 relative z-10">
-                <svg className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_5px_rgba(6,182,212,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span className="text-slate-400 font-medium">Member Since</span>
-              </div>
-              <span className="font-bold text-slate-200 text-lg relative z-10">
-                {new Date(customerProfile.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-
-          {/* Action Menus */}
-          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-6">
-            <a
-              href="/admin/services"
-              className="inline-block bg-linear-to-r from-cyan-600 to-blue-600 text-white px-8 py-4 rounded-2xl
-              hover:from-cyan-500 hover:to-blue-500 transition-all duration-300 font-bold text-lg shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] transform hover:-translate-y-1 flex-1 text-center border border-cyan-400/30"
-            >
-              Manage Services
-            </a>
-            <a
-              href="/admin/customer"
-              className="inline-block bg-linear-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-2xl
-              hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 font-bold text-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] transform hover:-translate-y-1 flex-1 text-center border border-emerald-400/30"
-            >
-              Manage Customer
-            </a>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-10 text-center">
-            <p className="text-sm text-slate-500">
-              Welcome to PDAM Admin Dashboard
-            </p>
           </div>
         </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "32px" }}>
+          
+          {/* Main Info Column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+            
+            {/* Info Cards Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+              <InfoCard 
+                label="Username" 
+                value={adminProfile?.user?.username || "N/A"} 
+                icon={<User size={20} />} 
+                color="#38bdf8" 
+              />
+              <InfoCard 
+                label="Phone Number" 
+                value={adminProfile.phone} 
+                icon={<Phone size={20} />} 
+                color="#4ade80" 
+              />
+              <InfoCard 
+                label="Member Since" 
+                value={joinDate} 
+                icon={<Calendar size={20} />} 
+                color="#f472b6" 
+                fullWidth
+              />
+            </div>
+
+            {/* Quick Actions Container */}
+            <div style={{
+              background: "rgba(255,255,255,0.03)",
+              backdropFilter: "blur(20px)",
+              borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)",
+              padding: "40px",
+            }}>
+              <h2 style={{
+                fontSize: "18px", fontWeight: 800, color: "#ffffff",
+                marginBottom: "24px", display: "flex", alignItems: "center", gap: "12px",
+              }}>
+                <Activity size={20} style={{ color: "#38bdf8" }} />
+                Admin Features
+              </h2>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                <ActionCard 
+                  href="/admin/services" 
+                  title="Services" 
+                  desc="Manage PDAM services" 
+                  icon={<Droplet size={24} />} 
+                  color="#38bdf8" 
+                />
+                <ActionCard 
+                  href="/admin/customer" 
+                  title="Customers" 
+                  desc="Manage user database" 
+                  icon={<Users size={24} />} 
+                  color="#4ade80" 
+                />
+                <ActionCard 
+                  href="/admin/bills" 
+                  title="Bills" 
+                  desc="Billing operations" 
+                  icon={<FileText size={24} />} 
+                  color="#fbbf24" 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar / Status */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+            <div style={{
+              background: "linear-gradient(135deg, rgba(56,189,248,0.1), rgba(74,222,128,0.1))",
+              borderRadius: "24px", border: "1px solid rgba(56,189,248,0.2)",
+              padding: "32px", textAlign: "center",
+            }}>
+              <div style={{
+                width: "60px", height: "60px", borderRadius: "50%",
+                background: "rgba(74,222,128,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 16px",
+              }}>
+                <div style={{
+                  width: "12px", height: "12px", borderRadius: "50%",
+                  background: "#4ade80", boxShadow: "0 0 12px #4ade80",
+                }} />
+              </div>
+              <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: 0 }}>System Active</h3>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginTop: "8px" }}>
+                Your administrative privileges are currently active and secure.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: "60px", textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: "13px" }}>
+          PDAM Baru © 2024 • Admin Control Center
+        </div>
+      </div>
+      <style>{`
+          .action-card {
+            transition: all 0.3s ease !important;
+          }
+          .action-card:hover {
+            transform: translateY(-5px) !important;
+            background: rgba(255,255,255,0.06) !important;
+            border-color: var(--hover-color) !important;
+            box-shadow: 0 10px 30px -10px var(--hover-shadow) !important;
+          }
+        `}</style>
+    </div>
+  );
+}
+
+function InfoCard({ label, value, icon, color, fullWidth = false }: any) {
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.02)",
+      borderRadius: "20px", border: "1px solid rgba(255,255,255,0.05)",
+      padding: "24px", gridColumn: fullWidth ? "span 2" : "span 1",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", color: color, marginBottom: "12px" }}>
+        {icon}
+        <span style={{ fontSize: "12px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          {label}
+        </span>
+      </div>
+      <div style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff" }}>
+        {value}
       </div>
     </div>
-  )
+  );
+}
+
+function ActionCard({ href, title, desc, icon, color }: any) {
+  return (
+    <Link href={href} style={{ textDecoration: "none" }}>
+      <div 
+        className="action-card" 
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          borderRadius: "16px", border: "1px solid rgba(255,255,255,0.08)",
+          padding: "20px", display: "flex", flexDirection: "column", gap: "12px",
+          // @ts-ignore
+          "--hover-color": color + "44",
+          "--hover-shadow": color + "22",
+        } as React.CSSProperties}
+      >
+        <div style={{
+          width: "40px", height: "40px", borderRadius: "10px",
+          background: color + "15", border: "1px solid " + color + "33",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: color,
+        }}>
+          {icon}
+        </div>
+        <div>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff" }}>{title}</div>
+          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>{desc}</div>
+        </div>
+      </div>
+    </Link>
+  );
 }

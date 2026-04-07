@@ -1,254 +1,435 @@
-// use client digunakan untuk menunjukkan halaman tersebut merupakan halaman client side rendering
-// client side rendering berarti halaman tersebut dirender di sisi klien (browser) bukan di sisi server
+"use client";
 
-// waktu yang tepat untuk menggunakan "use client":
-// 1. ketika halaman tersebut membutuhkan interaksi user secara langsung
-// 2. ketika halaman tersebut membutuhkan state management
-// 3. ketika halaman tersebut membutuhkan efek samping (side effects) seperti fetching data di sisi klien
-"use client"
-
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Droplet, User, Lock, Phone, Eye, EyeOff, UserCheck, ArrowLeft } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
 
 export default function SignUpPage() {
-    // Define state
-    // State adalah variabel yang menyimpan informasi yang dapat berubah selama proses rendering komponen
-    // State adalah variabel yang memyimpan data dinamis yang dapat berubah seiring interaksi user atau perubahan data lainnya
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
-    const [username, setUsername] = useState<string>("");
-    // Username : nama state yang menyimpan nilai input username
-    // setUsername : fungsi untuk mengubah nilai state username
-    const [password, setPassword] = useState<string>("");
-    const [name, setName] = useState<string>("");
-    const [phone, setPhone] = useState<string>("");
-    const [showPassword, setShowPassword] = useState<boolean>(false);
-    const [showSuccess, setShowSuccess] = useState<boolean>(false);
-    const [showError, setShowError] = useState<boolean>(false);
-    const [errorMessage, setErrorMessage] = useState<string>("");
-    const router = useRouter();
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    startTransition(async () => {
+      try {
+        const request = JSON.stringify({
+          username,
+          password,
+          phone,
+          name,
+        });
+        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/admins`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "app-key": `${process.env.NEXT_PUBLIC_APP_KEY}`,
+          },
+          body: request,
+        });
 
-    async function handleSignUp(e : React.FormEvent) {
-        e.preventDefault();
-        try{
-            const request = JSON.stringify({ //Mengubah data JavaScript menjadi format JSON string
-                username,
-                password,
-                phone,
-                name
-            })
-            const url = `${process.env.NEXT_PUBLIC_BASE_URL}/admins`
-            const response = await fetch(url , { //melakukan request ke server 
-                method: "POST", 
-                headers: {
-                    "Content-Type" : "application/json",
-                    "app-key" : `${process.env.NEXT_PUBLIC_APP_KEY}`
-                },
-                body: request
-            })
-            if (!response.ok) { //false
-                setErrorMessage("Failed to register admin");
-                setShowError(true);
-                return;
-            }
-            const responseData = await response.json();
-            setShowSuccess(true);
-        }catch (error) {
-            console.error("Error during sign up :" , error)
+        if (!response.ok) {
+          const errorData = await response.json();
+          toast.error(errorData.message || "Failed to register admin", { containerId: "toastSignUp" });
+          return;
         }
-    }
 
-    return (
-        <div
-            className="w-full min-h-dvh 
-            bg-linear-to-br from-pink-100 via-rose-100 to-pink-200
-            flex items-center justify-center p-6"
-        >
-            <div
-                className="relative w-full max-w-lg 
-                bg-white/70 backdrop-blur-xl
-                rounded-2xl shadow-xl border border-white/40
-                p-8"
-            >
-                {/* Decorative blur */}
-                <div className="absolute -top-16 -right-16 w-48 h-48 
-                    bg-pink-300/40 rounded-full blur-3xl"></div>
+        setShowSuccess(true);
+      } catch (error) {
+        console.error("Error during sign up :", error);
+        toast.error("Something went wrong. Please try again.", { containerId: "toastSignUp" });
+      }
+    });
+  }
 
-                <div className="relative">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-pink-700">
-                            Register Admin PDAM
-                        </h1>
-                        <p className="text-sm text-gray-600 mt-2">
-                            Create your admin account
-                        </p>
-                    </div>
+  return (
+    <div style={{
+      minHeight: "100vh", width: "100%",
+      backgroundColor: "#0a0f1e",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "24px", position: "relative", overflow: "hidden",
+    }}>
+      <ToastContainer containerId="toastSignUp" />
 
-                    {/* Form */}
-                    <form onSubmit={handleSignUp} className="space-y-6">
-                        <Input
-                            label="Username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter username"
-                            icon={
-                                <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            }
-                        />
+      {/* ── Background Orbs ── */}
+      <div style={{
+        position: "absolute", width: "500px", height: "500px",
+        borderRadius: "50%", top: "-150px", right: "-150px",
+        background: "rgba(56,189,248,0.1)", filter: "blur(100px)",
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", width: "400px", height: "400px",
+        borderRadius: "50%", bottom: "-100px", left: "-100px",
+        background: "rgba(74,222,128,0.08)", filter: "blur(90px)",
+        pointerEvents: "none",
+      }} />
 
-                        <Input
-                            label="Password"
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Create password"
-                            icon={
-                                <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            }
-                            rightIcon={
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-pink-500 hover:text-pink-600"
-                                >
-                                    {showPassword ? (
-                                        
-                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    ) : (
-                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 012.563-4.306m5.858 5.858a3 3 0 104.243 4.243m-4.243-4.243L3 3m6.872 6.872a3 3 0 014.243 4.243m0 0L21 21" />
-                                        </svg>
-                                    )}
-                                </button>
-                            }
-                        />
+      {/* ── Grid overlay ── */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.03,
+        backgroundImage: `linear-gradient(#00e5ff 1px, transparent 1px),
+          linear-gradient(90deg, #00e5ff 1px, transparent 1px)`,
+        backgroundSize: "60px 60px",
+      }} />
 
-                        <Input
-                            label="Nama Lengkap"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Full name"
-                            icon={
-                                <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                </svg>
-                            }
-                        />
+      {/* ── Card ── */}
+      <div style={{
+        position: "relative", zIndex: 10,
+        width: "100%", maxWidth: "480px",
+        borderRadius: "24px",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(74,222,128,0.2)",
+        boxShadow: "0 0 60px rgba(56,189,248,0.08), inset 0 0 40px rgba(56,189,248,0.02)",
+        overflow: "hidden",
+      }}>
 
-                        <Input
-                            label="No. Telepon"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="08xxxxxxxxxx"
-                            icon={
-                                <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                </svg>
-                            }
-                        />
+        {/* Top accent line */}
+        <div style={{
+          height: "2px",
+          background: "linear-gradient(90deg, #38bdf8, #4ade80, transparent)",
+        }} />
 
-                        <button
-                            type="submit"
-                            className="w-full py-3 rounded-xl
-                            bg-linear-to-r from-pink-500 to-rose-500
-                            text-white font-semibold text-lg
-                            hover:opacity-90 active:scale-[0.98]
-                            transition shadow-lg"
-                        >
-                            Sign Up
-                        </button>
-                    </form>
-                </div>
+        <div style={{ padding: "40px 36px 36px", position: "relative" }}>
+
+          {/* ── Back Button ── */}
+          <Link href="/" style={{
+            position: "absolute", top: "24px", left: "24px",
+            display: "flex", alignItems: "center", gap: "6px",
+            color: "rgba(255,255,255,0.4)", textDecoration: "none",
+            fontSize: "13px", fontWeight: 600, transition: "all 0.2s",
+            zIndex: 20,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = "#4ade80")}
+          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+          >
+            <ArrowLeft size={16} /> Back
+          </Link>
+
+          {/* ── Header ── */}
+          <div style={{ textAlign: "center", marginBottom: "32px" }}>
+            <div style={{
+              width: "56px", height: "56px", borderRadius: "16px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(56,189,248,0.1)",
+              border: "1px solid rgba(56,189,248,0.25)",
+              boxShadow: "0 0 24px rgba(56,189,248,0.2)",
+              margin: "0 auto 20px",
+            }}>
+              <UserCheck
+                size={26}
+                style={{
+                  color: "#38bdf8",
+                  filter: "drop-shadow(0 0 10px rgba(56,189,248,0.8))",
+                }}
+              />
             </div>
-            {/* Success Modal */}
-            {showSuccess && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 text-center max-w-sm mx-4">
-                        <div className="w-16 h-16 bg-linear-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <h2 className="text-2xl font-bold text-pink-700 mb-2">Registration Successful! 🎉</h2>
-                        <p className="text-gray-600">Welcome to PDAM! You can now sign in.</p>
-                        <button
-                            onClick={() => {
-                                setShowSuccess(false);
-                                router.push('/sign-in');
-                            }}
-                            className="mt-4 px-6 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition"
-                        >
-                            Go to Sign In
-                        </button>
-                    </div>
-                </div>
-            )}
 
-            {/* Error Modal */}
-            {showError && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 text-center max-w-sm mx-4">
-                        <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </div>
-                        <h2 className="text-2xl font-bold text-red-700 mb-2">Registration Failed</h2>
-                        <p className="text-gray-600">{errorMessage}</p>
-                        <button
-                            onClick={() => setShowError(false)}
-                            className="mt-4 px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                        >
-                            Try Again
-                        </button>
-                    </div>
-                </div>
-            )}        </div>
-    )
+            <h1 style={{
+              fontSize: "28px", fontWeight: 900,
+              color: "#38bdf8", margin: 0, marginBottom: "6px",
+              textShadow: "0 0 24px rgba(56,189,248,0.35)",
+              letterSpacing: "-0.02em",
+            }}>
+              Join PDAM Baru
+            </h1>
+            <p style={{
+              fontSize: "14px",
+              color: "rgba(255,255,255,0.4)",
+              margin: 0,
+            }}>
+              Create your administrator account
+            </p>
+          </div>
+
+          {/* ── Form ── */}
+          <form onSubmit={handleSignUp}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+
+              {/* Username field */}
+              <Input
+                label="Username"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder="Enter username"
+                icon={<User size={16} />}
+              />
+
+              {/* Password field */}
+              <Input
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Create password"
+                icon={<Lock size={16} />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      color: "rgba(255,255,255,0.35)",
+                      display: "flex", alignItems: "center",
+                      transition: "color 0.2s", padding: 0,
+                    }}
+                    onMouseEnter={e =>
+                      ((e.currentTarget as HTMLButtonElement).style.color = "#38bdf8")
+                    }
+                    onMouseLeave={e =>
+                      ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)")
+                    }
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                }
+              />
+
+              {/* Name field */}
+              <Input
+                label="Full Name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Enter full name"
+                icon={<User size={16} />}
+              />
+
+              {/* Phone field */}
+              <Input
+                label="Phone Number"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="08xxxxxxxxxx"
+                icon={<Phone size={16} />}
+              />
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={isPending}
+                style={{
+                  width: "100%", padding: "14px",
+                  borderRadius: "12px", border: "none",
+                  background: isPending ? "rgba(74,222,128,0.5)" : "#4ade80",
+                  color: "#0a0f1e", fontSize: "15px", fontWeight: 700,
+                  cursor: isPending ? "not-allowed" : "pointer",
+                  boxShadow: "0 0 24px rgba(74,222,128,0.3)",
+                  transition: "all 0.2s", marginTop: "10px",
+                  letterSpacing: "0.02em",
+                }}
+                onMouseEnter={e => {
+                  if (!isPending) {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.boxShadow = "0 0 36px rgba(74,222,128,0.6)";
+                    el.style.transform = "scale(1.02)";
+                  }
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.boxShadow = "0 0 24px rgba(74,222,128,0.3)";
+                  el.style.transform = "scale(1)";
+                }}
+              >
+                {isPending ? "Creating Account..." : "Create Account"}
+              </button>
+
+            </div>
+          </form>
+
+          {/* ── Footer Link ── */}
+          <div style={{
+            marginTop: "24px", textAlign: "center",
+          }}>
+            <div style={{
+              height: "1px", marginBottom: "20px",
+              background: "rgba(255,255,255,0.06)",
+            }} />
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", margin: 0 }}>
+              Already have an account?{" "}
+              <Link
+                href="/sign-in"
+                style={{
+                  color: "#38bdf8", fontWeight: 700,
+                  textDecoration: "none",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={e =>
+                  ((e.currentTarget as HTMLAnchorElement).style.textShadow = "0 0 10px rgba(56,189,248,0.6)")
+                }
+                onMouseLeave={e =>
+                  ((e.currentTarget as HTMLAnchorElement).style.textShadow = "none")
+                }
+              >
+                Sign In Instead
+              </Link>
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Success Modal ── */}
+      {showSuccess && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50,
+          backgroundColor: "rgba(0,0,0,0.7)",
+          backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            borderRadius: "24px", padding: "40px 36px",
+            background: "rgba(10,15,30,0.98)",
+            border: "1px solid rgba(74,222,128,0.3)",
+            boxShadow: "0 0 60px rgba(74,222,128,0.15)",
+            textAlign: "center", maxWidth: "360px", width: "90%",
+            position: "relative", overflow: "hidden",
+          }}>
+            {/* Top accent */}
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+              background: "linear-gradient(90deg, #4ade80, #38bdf8, transparent)",
+            }} />
+
+            {/* Check icon */}
+            <div style={{
+              width: "64px", height: "64px", borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(74,222,128,0.1)",
+              border: "1px solid rgba(74,222,128,0.4)",
+              boxShadow: "0 0 32px rgba(74,222,128,0.25)",
+              margin: "0 auto 20px",
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <h2 style={{
+              fontSize: "22px", fontWeight: 900,
+              color: "#4ade80", margin: 0, marginBottom: "8px",
+              textShadow: "0 0 20px rgba(74,222,128,0.4)",
+            }}>
+              Account Created! 🎉
+            </h2>
+            <p style={{
+              fontSize: "14px", color: "rgba(255,255,255,0.45)",
+              margin: 0, marginBottom: "24px",
+            }}>
+              Registration complete. You can now access your account.
+            </p>
+
+            <button
+              onClick={() => router.push("/sign-in")}
+              style={{
+                width: "100%", padding: "12px",
+                borderRadius: "12px", border: "none",
+                background: "#38bdf8",
+                color: "#0a0f1e", fontSize: "14px", fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 0 20px rgba(56,189,248,0.3)",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = "0 0 28px rgba(56,189,248,0.5)";
+                e.currentTarget.style.transform = "scale(1.02)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = "0 0 20px rgba(56,189,248,0.3)";
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              Take me to Sign In
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        input::placeholder {
+          color: rgba(255,255,255,0.2);
+        }
+      `}</style>
+    </div>
+  );
 }
 
 /* Reusable input component */
 function Input({
-    label,
-    icon,
-    rightIcon,
-    ...props
+  label,
+  icon,
+  rightIcon,
+  ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & {
-    label: string
-    icon?: React.ReactNode
-    rightIcon?: React.ReactNode
+  label: string;
+  icon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }) {
-    return (
-        <div className="flex flex-col gap-2 text-sm">
-            <label className="text-gray-700 font-medium">{label}</label>
-            <div className="relative">
-                {icon && (
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        {icon}
-                    </div>
-                )}
-                <input
-                    {...props}
-                    className={`px-55 py-4 rounded-xl
-                    bg-white/90 border border-pink-200
-                    focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400
-                    text-gray-800 transition-all duration-200
-                    ${icon ? 'pl-14' : ''} ${rightIcon ? 'pr-55' : ''}`}
-                    required
-                />
-                {rightIcon && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        {rightIcon}
-                    </div>
-                )}
-            </div>
-        </div>
-    )
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <label style={{
+        fontSize: "12px", fontWeight: 700,
+        color: "#4ade80",
+        textTransform: "uppercase", letterSpacing: "0.1em",
+      }}>
+        {label}
+      </label>
+      <div style={{ position: "relative" }}>
+        {icon && (
+          <div style={{
+            position: "absolute", left: "14px", top: "50%",
+            transform: "translateY(-50%)",
+            color: "rgba(56,189,248,0.6)",
+            display: "flex", alignItems: "center",
+          }}>
+            {icon}
+          </div>
+        )}
+        <input
+          {...props}
+          style={{
+            width: "100%", padding: icon ? "13px 14px 13px 42px" : "13px 14px",
+            borderRadius: "12px",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(74,222,128,0.2)",
+            color: "#ffffff", fontSize: "14px",
+            outline: "none", transition: "all 0.2s",
+            boxSizing: "border-box",
+            paddingRight: rightIcon ? "44px" : "14px",
+          }}
+          onFocus={e => {
+            e.currentTarget.style.borderColor = "rgba(56,189,248,0.5)";
+            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(56,189,248,0.08)";
+            e.currentTarget.style.background = "rgba(56,189,248,0.04)";
+          }}
+          onBlur={e => {
+            e.currentTarget.style.borderColor = "rgba(74,222,128,0.2)";
+            e.currentTarget.style.boxShadow = "none";
+            e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+          }}
+          required
+        />
+        {rightIcon && (
+          <div style={{
+            position: "absolute", right: "14px", top: "50%",
+            transform: "translateY(-50%)",
+            display: "flex", alignItems: "center",
+          }}>
+            {rightIcon}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

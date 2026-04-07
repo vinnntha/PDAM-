@@ -1,225 +1,420 @@
 "use client"
 
 import { getCookies } from "@/helper/cookies"
-import { useRouter } from "next/dist/client/components/navigation"
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
+import {
+  ArrowLeft, Package, MinusCircle,
+  PlusCircle, DollarSign, Loader2, Save,
+} from "lucide-react"
 
 export default function AddPage() {
   const [ServiceName, setServiceName] = useState("")
-  const [MinUsage, setMinUsage] = useState("")
-  const [MaxUsage, setMaxUsage] = useState("")
-  const [Price, setPrice] = useState("")
+  const [MinUsage, setMinUsage]       = useState("")
+  const [MaxUsage, setMaxUsage]       = useState("")
+  const [Price, setPrice]             = useState("")
+  const [isLoading, setIsLoading]     = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [showError, setShowError] = useState(false)
+  const [showError, setShowError]     = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
 
   useEffect(() => {
     if (showSuccess) {
-      const timer = setTimeout(() => {
-        router.push('/admin/services')
-      }, 2000)
-      return () => clearTimeout(timer)
+      const t = setTimeout(() => router.push("/admin/services"), 2000)
+      return () => clearTimeout(t)
     }
   }, [showSuccess, router])
 
   async function handleAddService(e: React.FormEvent) {
     e.preventDefault()
+    setIsLoading(true)
     try {
-      const request = JSON.stringify({
-        name: ServiceName,
-        min_usage: parseInt(MinUsage) || 0,
-        max_usage: parseInt(MaxUsage) || 0,
-        price: parseInt(Price) || 0,
-      })
-      
-
-      const url = `${process.env.NEXT_PUBLIC_BASE_URL}/services`
-      const response = await fetch(url, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/services`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "app-key": process.env.NEXT_PUBLIC_APP_KEY || "",
           "authorization": `Bearer ${await getCookies("token")}`,
         },
-        body: request,
+        body: JSON.stringify({
+          name: ServiceName,
+          min_usage: parseInt(MinUsage) || 0,
+          max_usage: parseInt(MaxUsage) || 0,
+          price: parseInt(Price) || 0,
+        }),
       })
-      console.log(request)
-      
       if (!response.ok) {
-        setErrorMessage("Failed to add service")
+        const err = await response.json()
+        setErrorMessage(err.message || "Failed to add service")
         setShowError(true)
-        console.error("ADD SERVICE ERROR:", response.status, await response.text())
+        setIsLoading(false)
         return
       }
-
       setShowSuccess(true)
-    } catch (error) {
-      console.error("Error during adding service:", error)
+      setIsLoading(false)
+    } catch {
+      setErrorMessage("Something went wrong. Please check your connection.")
+      setShowError(true)
+      setIsLoading(false)
     }
   }
 
+  const inputStyle = {
+    width: "100%", padding: "13px 16px", borderRadius: "12px",
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(74,222,128,0.2)",
+    color: "#ffffff", fontSize: "14px",
+    outline: "none", transition: "all 0.2s",
+    boxSizing: "border-box" as const,
+  }
+
+  const inputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = "rgba(56,189,248,0.5)";
+    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(56,189,248,0.08)";
+    e.currentTarget.style.background = "rgba(56,189,248,0.04)";
+  }
+  const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = "rgba(74,222,128,0.2)";
+    e.currentTarget.style.boxShadow = "none";
+    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+  }
+
   return (
-    <div
-      className="w-full min-h-dvh 
-      bg-linear-to-br from-pink-100 via-rose-100 to-pink-200
-      flex items-center justify-center p-6"
-    >
-      <div
-        className="relative w-full max-w-lg 
-        bg-white/70 backdrop-blur-xl
-        rounded-2xl shadow-xl border border-white/40
-        p-8"
-      >
-        {/* Decorative blur */}
-        <div className="absolute -top-16 -right-16 w-48 h-48 
-            bg-pink-300/40 rounded-full blur-3xl"></div>
+    <div style={{
+      minHeight: "100vh", backgroundColor: "#0a0f1e",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      padding: "32px 24px", position: "relative", overflow: "hidden",
+    }}>
+      {/* Orbs */}
+      <div style={{
+        position: "absolute", width: "500px", height: "500px", borderRadius: "50%",
+        top: "-120px", right: "-120px",
+        background: "rgba(56,189,248,0.09)", filter: "blur(110px)", pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", width: "450px", height: "450px", borderRadius: "50%",
+        bottom: "-100px", left: "-100px",
+        background: "rgba(74,222,128,0.07)", filter: "blur(100px)", pointerEvents: "none",
+      }} />
+      {/* Grid */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.03,
+        backgroundImage: `linear-gradient(#00e5ff 1px,transparent 1px),linear-gradient(90deg,#00e5ff 1px,transparent 1px)`,
+        backgroundSize: "60px 60px",
+      }} />
 
-        <div className="relative">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-pink-700">
-              Add New Service
-            </h1>
-            <p className="text-sm text-gray-600 mt-2">
-              Configure your service details below
-            </p>
+      <div style={{ width: "100%", maxWidth: "560px", position: "relative", zIndex: 10 }}>
+
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            background: "none", border: "none", cursor: "pointer",
+            color: "rgba(255,255,255,0.45)", marginBottom: "24px",
+            fontSize: "13px", fontWeight: 600, transition: "all 0.2s", padding: 0,
+          }}
+          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = "#38bdf8"}
+          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.45)"}
+        >
+          <div style={{
+            width: "30px", height: "30px", borderRadius: "8px",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <ArrowLeft size={14} />
           </div>
+          Back to Services
+        </button>
 
-          {/* Form */}
-          <form onSubmit={handleAddService} className="space-y-6">
-            <Input
-              label="Service Name"
-              placeholder="e.g., Internet Package"
-              value={ServiceName}
-              onChange={(e) => setServiceName(e.target.value)}
-              icon={
-                <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              }
-            />
+        {/* Main card */}
+        <div style={{
+          borderRadius: "24px", overflow: "hidden",
+          background: "rgba(255,255,255,0.025)",
+          border: "1px solid rgba(74,222,128,0.2)",
+          boxShadow: "0 0 60px rgba(56,189,248,0.07)",
+        }}>
+          {/* Top accent */}
+          <div style={{
+            height: "2px",
+            background: "linear-gradient(90deg, #38bdf8, #4ade80, transparent)",
+          }} />
 
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                label="Min Usage"
-                type="number"
-                placeholder="0"
-                value={MinUsage}
-                onChange={(e) => setMinUsage(e.target.value)}
-                icon={
-                  <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                }
-              />
-              <Input
-                label="Max Usage"
-                type="number"
-                placeholder="0"
-                value={MaxUsage}
-                onChange={(e) => setMaxUsage(e.target.value)}
-                icon={
-                  <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                }
-              />
+          <div style={{ padding: "40px 36px" }}>
+            {/* Header */}
+            <div style={{ textAlign: "center", marginBottom: "36px" }}>
+              <div style={{
+                width: "52px", height: "52px", borderRadius: "14px",
+                background: "rgba(56,189,248,0.1)",
+                border: "1px solid rgba(56,189,248,0.25)",
+                boxShadow: "0 0 20px rgba(56,189,248,0.18)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 16px",
+              }}>
+                <Package size={22} style={{ color: "#38bdf8" }} />
+              </div>
+              <h1 style={{
+                fontSize: "26px", fontWeight: 900,
+                color: "#38bdf8", margin: "0 0 6px",
+                textShadow: "0 0 20px rgba(56,189,248,0.3)",
+                letterSpacing: "-0.02em",
+              }}>
+                Add New Service
+              </h1>
+              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+                Configure a new service tier in the system
+              </p>
             </div>
 
-            <Input
-              label="Price (Rp)"
-              type="number"
-              placeholder="0"
-              value={Price}
-              onChange={(e) => setPrice(e.target.value)}
-              icon={
-                <svg className="h-5 w-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              }
-            />
+            {/* Form */}
+            <form onSubmit={handleAddService}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl
-              bg-linear-to-r from-pink-500 to-rose-500
-              text-white font-semibold text-lg
-              hover:opacity-90 active:scale-[0.98]
-              transition shadow-lg"
-            >
-              Save Service
-            </button>
-          </form>
+                {/* Service Name */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{
+                    fontSize: "11px", fontWeight: 700, color: "#4ade80",
+                    textTransform: "uppercase", letterSpacing: "0.1em",
+                    display: "flex", alignItems: "center", gap: "6px",
+                  }}>
+                    <Package size={13} /> Service Name
+                  </label>
+                  <input
+                    type="text" required value={ServiceName}
+                    onChange={e => setServiceName(e.target.value)}
+                    placeholder="e.g., Premium Water Tier"
+                    style={inputStyle} onFocus={inputFocus} onBlur={inputBlur}
+                  />
+                </div>
+
+                {/* Min / Max Usage */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <label style={{
+                      fontSize: "11px", fontWeight: 700, color: "#4ade80",
+                      textTransform: "uppercase", letterSpacing: "0.1em",
+                      display: "flex", alignItems: "center", gap: "6px",
+                    }}>
+                      <MinusCircle size={13} /> Min Usage (m³)
+                    </label>
+                    <input
+                      type="number" required value={MinUsage}
+                      onChange={e => setMinUsage(e.target.value)}
+                      placeholder="0"
+                      style={inputStyle} onFocus={inputFocus} onBlur={inputBlur}
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <label style={{
+                      fontSize: "11px", fontWeight: 700, color: "#4ade80",
+                      textTransform: "uppercase", letterSpacing: "0.1em",
+                      display: "flex", alignItems: "center", gap: "6px",
+                    }}>
+                      <PlusCircle size={13} /> Max Usage (m³)
+                    </label>
+                    <input
+                      type="number" required value={MaxUsage}
+                      onChange={e => setMaxUsage(e.target.value)}
+                      placeholder="100"
+                      style={inputStyle} onFocus={inputFocus} onBlur={inputBlur}
+                    />
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{
+                    fontSize: "11px", fontWeight: 700, color: "#4ade80",
+                    textTransform: "uppercase", letterSpacing: "0.1em",
+                    display: "flex", alignItems: "center", gap: "6px",
+                  }}>
+                    <DollarSign size={13} /> Price (Rp)
+                  </label>
+                  <input
+                    type="number" required value={Price}
+                    onChange={e => setPrice(e.target.value)}
+                    placeholder="1500"
+                    style={inputStyle} onFocus={inputFocus} onBlur={inputBlur}
+                  />
+                </div>
+
+                {/* Buttons */}
+                <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                  <button
+                    type="submit" disabled={isLoading}
+                    style={{
+                      flex: 1, padding: "13px", borderRadius: "12px",
+                      background: isLoading ? "rgba(56,189,248,0.5)" : "#38bdf8",
+                      color: "#0a0f1e", fontSize: "14px", fontWeight: 700,
+                      border: "none", cursor: isLoading ? "not-allowed" : "pointer",
+                      boxShadow: "0 0 20px rgba(56,189,248,0.35)",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => {
+                      if (!isLoading) {
+                        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 32px rgba(56,189,248,0.6)";
+                        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.02)";
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(56,189,248,0.35)";
+                      (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+                    }}
+                  >
+                    {isLoading ? <Loader2 size={16} style={{ animation: "spin 0.8s linear infinite" }} /> : <Save size={16} />}
+                    {isLoading ? "Saving..." : "Save Service"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/admin/services")}
+                    style={{
+                      flex: 1, padding: "13px", borderRadius: "12px",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.7)", fontSize: "14px", fontWeight: 600,
+                      cursor: "pointer", transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "#ffffff";
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)";
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
-      {/* Success Modal */}
+      {/* ── Success Modal ── */}
       {showSuccess && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 text-center max-w-sm mx-4 animate-bounce">
-            <div className="w-16 h-16 bg-linear-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50,
+          background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            borderRadius: "24px", padding: "40px 36px",
+            background: "#0a0f1e",
+            border: "1px solid rgba(74,222,128,0.3)",
+            boxShadow: "0 0 60px rgba(74,222,128,0.15)",
+            textAlign: "center", maxWidth: "360px", width: "90%",
+            position: "relative", overflow: "hidden",
+          }}>
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+              background: "linear-gradient(90deg, #4ade80, #38bdf8, transparent)",
+            }} />
+            <div style={{
+              width: "60px", height: "60px", borderRadius: "50%",
+              background: "rgba(74,222,128,0.1)",
+              border: "1px solid rgba(74,222,128,0.35)",
+              boxShadow: "0 0 28px rgba(74,222,128,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 18px",
+            }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-pink-700 mb-2">Service Added! 🎉</h2>
-            <p className="text-gray-600">Your new service has been created successfully.</p>
+            <h2 style={{
+              fontSize: "22px", fontWeight: 900, color: "#4ade80",
+              margin: "0 0 8px", textShadow: "0 0 16px rgba(74,222,128,0.4)",
+            }}>
+              Service Created!
+            </h2>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", margin: "0 0 24px" }}>
+              New service has been added. Returning to list...
+            </p>
+            {/* Progress bar */}
+            <div style={{
+              height: "3px", borderRadius: "999px",
+              background: "rgba(255,255,255,0.08)", overflow: "hidden",
+            }}>
+              <div style={{
+                height: "100%", background: "#4ade80",
+                animation: "progress 2s linear forwards",
+              }} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Error Modal */}
+      {/* ── Error Modal ── */}
       {showError && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 text-center max-w-sm mx-4">
-            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50,
+          background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            borderRadius: "24px", padding: "40px 36px",
+            background: "#0a0f1e",
+            border: "1px solid rgba(239,68,68,0.3)",
+            boxShadow: "0 0 60px rgba(239,68,68,0.1)",
+            textAlign: "center", maxWidth: "360px", width: "90%",
+            position: "relative", overflow: "hidden",
+          }}>
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+              background: "linear-gradient(90deg, #ef4444, transparent)",
+            }} />
+            <div style={{
+              width: "60px", height: "60px", borderRadius: "50%",
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 18px",
+            }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-red-700 mb-2">Failed to Add Service</h2>
-            <p className="text-gray-600">{errorMessage}</p>
+            <h2 style={{
+              fontSize: "22px", fontWeight: 900, color: "#ef4444",
+              margin: "0 0 8px",
+            }}>
+              Failed
+            </h2>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", margin: "0 0 24px" }}>
+              {errorMessage}
+            </p>
             <button
               onClick={() => setShowError(false)}
-              className="mt-4 px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+              style={{
+                width: "100%", padding: "12px", borderRadius: "12px",
+                background: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.3)",
+                color: "#ef4444", fontSize: "14px", fontWeight: 700,
+                cursor: "pointer", transition: "all 0.2s",
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.15)"}
+              onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"}
             >
-              Try Again
+              Close and Retry
             </button>
           </div>
         </div>
       )}
-    </div>
-  )
-}
 
-/* Reusable input component */
-function Input({
-  label,
-  icon,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  label: string
-  icon?: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2 text-sm">
-      <label className="text-gray-700 font-medium">{label}</label>
-      <div className="relative">
-        {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            {icon}
-          </div>
-        )}
-        <input
-          {...props}
-          className={`px-1.1 py-3 rounded-xl
-          bg-white/90 border border-pink-200
-          focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400
-          text-gray-800 transition-all duration-200
-          ${icon ? 'pl-12' : ''}`}
-        />
-      </div>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes progress { from { width: 0; } to { width: 100%; } }
+        input::placeholder { color: rgba(255,255,255,0.2); }
+        input[type=number]::-webkit-inner-spin-button { opacity: 0.3; }
+      `}</style>
     </div>
   )
 }

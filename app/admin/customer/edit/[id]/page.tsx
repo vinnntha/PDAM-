@@ -94,7 +94,7 @@ export default async function EditPage({
   }
 
   return (
-    <div className="w-full p-5">
+    <div className="w-full">
       <EditCustomer customer={customer} services={services}/>
     </div>
   )
