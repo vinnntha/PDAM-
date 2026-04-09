@@ -104,7 +104,7 @@ export default function BillCard({ bill }: { bill: BillData }) {
       {/* Actions */}
       {!bill.paid && (
         <div style={{ display: "flex", gap: "10px" }}>
-          <a href="/customer/payments/new" style={{ flex: 1, textDecoration: "none" }}>
+          <a href={`/customer/payments/new?bill_id=${bill.id}`} style={{ flex: 1, textDecoration: "none" }}>
             <button
               style={{
                 width: "100%", display: "flex", alignItems: "center",

@@ -1,18 +1,25 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { getCookies } from "@/helper/cookies"
 import Link from "next/link"
 import { ArrowLeft, CreditCard, UploadCloud, FileImage, Loader2, CheckCircle2 } from "lucide-react"
 
 export default function PaymentForm({ pendingBills }: { pendingBills: any[] }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [billId, setBillId] = useState<string>("")
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // Pre-select bill if ?bill_id= is in the URL
+  useEffect(() => {
+    const id = searchParams.get("bill_id")
+    if (id) setBillId(id)
+  }, [searchParams])
 
   const MONTHS = ["", "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"]

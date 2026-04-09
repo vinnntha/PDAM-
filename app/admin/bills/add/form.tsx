@@ -3,8 +3,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getCookies } from "@/helper/cookies"
 import {
-  Receipt, User, Calendar, Droplets,
-  CreditCard, Hash, ArrowLeft, Save, Loader2, Layers,
+  Receipt, User, Calendar, Droplets, Hash, ArrowLeft, Save, Loader2,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -30,7 +29,7 @@ const inputStyle: React.CSSProperties = {
   outline: "none", transition: "all 0.2s", boxSizing: "border-box",
 }
 const selectStyle: React.CSSProperties = {
-  ...inputStyle,
+  ...inputStyle, 
   appearance: "none" as const,
   cursor: "pointer",
 }
@@ -47,7 +46,6 @@ const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
 
 export default function AddBillForm({ customers, services }: { customers: Customer[]; services: Service[] }) {
   const [customerId, setCustomerId]               = useState("")
-  const [serviceId, setServiceId]                 = useState("")
   const [measurementNumber, setMeasurementNumber] = useState("")
   const [usageValue, setUsageValue]               = useState("")
   const [month, setMonth]                         = useState(String(new Date().getMonth() + 1))
@@ -58,21 +56,8 @@ export default function AddBillForm({ customers, services }: { customers: Custom
   const [errorMessage, setErrorMessage]           = useState("")
   const router = useRouter()
 
-  // Auto-fill service when customer is selected
-  const handleCustomerChange = (id: string) => {
-    setCustomerId(id)
-    const customer = customers.find(c => c.id === Number(id))
-    if (customer?.service_id) setServiceId(String(customer.service_id))
-    else setServiceId("")
-  }
-
   const handleAddBill = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!serviceId) {
-      setErrorMessage("Please select a service.")
-      setShowError(true)
-      return
-    }
     setIsLoading(true)
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/bills`, {
@@ -84,7 +69,6 @@ export default function AddBillForm({ customers, services }: { customers: Custom
         },
         body: JSON.stringify({
           customer_id:        Number(customerId),
-          service_id:         Number(serviceId),
           month:              Number(month),
           year:               Number(year),
           measurement_number: measurementNumber,
@@ -150,23 +134,9 @@ export default function AddBillForm({ customers, services }: { customers: Custom
               <div>
                 <label style={labelStyle}><User size={13} /> Target Customer</label>
                 <div style={{ position: "relative" }}>
-                  <select required value={customerId} onChange={e => handleCustomerChange(e.target.value)} style={selectStyle} onFocus={onFocus} onBlur={onBlur}>
+                  <select required value={customerId} onChange={e => setCustomerId(e.target.value)} style={selectStyle} onFocus={onFocus} onBlur={onBlur}>
                     <option value="" style={{ background: "#0a0f1e" }}>Select a customer...</option>
                     {customers.map(c => <option key={c.id} value={c.id} style={{ background: "#0a0f1e" }}>{c.name} ({c.customer_number})</option>)}
-                  </select>
-                  <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "rgba(255,255,255,0.3)" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Service */}
-              <div>
-                <label style={labelStyle}><Layers size={13} /> Service</label>
-                <div style={{ position: "relative" }}>
-                  <select required value={serviceId} onChange={e => setServiceId(e.target.value)} style={selectStyle} onFocus={onFocus} onBlur={onBlur}>
-                    <option value="" style={{ background: "#0a0f1e" }}>Select a service...</option>
-                    {services.map(s => <option key={s.id} value={s.id} style={{ background: "#0a0f1e" }}>{s.name} — Rp {s.price?.toLocaleString("id-ID")}</option>)}
                   </select>
                   <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "rgba(255,255,255,0.3)" }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 9l-7 7-7-7" /></svg>
