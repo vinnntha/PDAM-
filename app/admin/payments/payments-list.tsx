@@ -6,9 +6,8 @@ import { getCookies } from "@/helper/cookies"
 import { PaymentData } from "./page"
 import { Clock, CheckCircle2, AlertCircle, X, Check, Eye } from "lucide-react"
 
-function StatusBadge({ status }: { status: string }) {
-  const s = status?.toLowerCase()
-  if (s === "verified" || s === "paid") return (
+function StatusBadge({ verified }: { verified: boolean }) {
+  if (verified) return (
     <div style={{
       display: "flex", alignItems: "center", gap: "6px",
       padding: "4px 12px", borderRadius: "999px",
@@ -16,10 +15,10 @@ function StatusBadge({ status }: { status: string }) {
       border: "1px solid rgba(74,222,128,0.3)",
     }}>
       <CheckCircle2 size={12} style={{ color: "#4ade80" }} />
-      <span style={{ fontSize: "10px", fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" }}>{status}</span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" }}>VERIFIED</span>
     </div>
   )
-  if (s === "pending") return (
+  return (
     <div style={{
       display: "flex", alignItems: "center", gap: "6px",
       padding: "4px 12px", borderRadius: "999px",
@@ -27,18 +26,7 @@ function StatusBadge({ status }: { status: string }) {
       border: "1px solid rgba(234,179,8,0.3)",
     }}>
       <Clock size={12} style={{ color: "#eab308" }} />
-      <span style={{ fontSize: "10px", fontWeight: 700, color: "#eab308", letterSpacing: "0.1em", textTransform: "uppercase" }}>{status}</span>
-    </div>
-  )
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: "6px",
-      padding: "4px 12px", borderRadius: "999px",
-      background: "rgba(239,68,68,0.08)",
-      border: "1px solid rgba(239,68,68,0.3)",
-    }}>
-      <AlertCircle size={12} style={{ color: "#ef4444" }} />
-      <span style={{ fontSize: "10px", fontWeight: 700, color: "#ef4444", letterSpacing: "0.1em", textTransform: "uppercase" }}>{status}</span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: "#eab308", letterSpacing: "0.1em", textTransform: "uppercase" }}>PENDING</span>
     </div>
   )
 }
@@ -60,12 +48,12 @@ export default function AdminPaymentsList({ initialData }: { initialData: Paymen
           "Authorization": `Bearer ${await getCookies("token")}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ status: "verified" })
+        body: JSON.stringify({ verified: true })
       })
 
       if (response.ok) {
         setPayments(prev => prev.map(p => 
-          p.id === paymentId ? { ...p, status: "Verified" } : p
+          p.id === paymentId ? { ...p, verified: true } : p
         ))
         router.refresh()
       } else {
@@ -105,8 +93,11 @@ export default function AdminPaymentsList({ initialData }: { initialData: Paymen
                   <div>
                     <h3 style={{ margin: "0 0 4px", fontSize: "16px", color: "#ffffff", fontWeight: 700 }}>Payment #{payment.id}</h3>
                     <p style={{ margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>Bill ID: {payment.bill_id}</p>
+                    {payment.total_amount != null && (
+                      <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#4ade80", fontWeight: 600 }}>Rp {payment.total_amount.toLocaleString("id-ID")}</p>
+                    )}
                   </div>
-                  <StatusBadge status={payment.status} />
+                  <StatusBadge verified={payment.verified} />
                 </div>
                 
                 {payment.bill?.customer && (
@@ -128,7 +119,7 @@ export default function AdminPaymentsList({ initialData }: { initialData: Paymen
                   >
                     <Eye size={14} /> View Proof
                   </button>
-                  {payment.status?.toLowerCase() === "pending" && (
+                  {!payment.verified && (
                     <button 
                       onClick={() => handleVerify(payment.id)}
                       disabled={loadingId === payment.id}

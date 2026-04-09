@@ -35,8 +35,6 @@ const labelStyle: React.CSSProperties = {
 export default function EditBillForm({ bill, customers }: Props) {
   const [measurementNumber, setMeasurementNumber] = useState(String(bill.measurement_number ?? ""))
   const [usageValue, setUsageValue] = useState(String(bill.usage_value ?? (bill as any).usage ?? ""))
-  const [amount, setAmount]         = useState(String(bill.amount ?? ""))
-  const [status, setStatus]         = useState(bill.status ?? "pending")
   const [isLoading, setIsLoading]   = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError]     = useState(false)
@@ -51,7 +49,7 @@ export default function EditBillForm({ bill, customers }: Props) {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/bills/${bill.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "app-key": process.env.NEXT_PUBLIC_APP_KEY || "", "Authorization": `Bearer ${await getCookies("token")}` },
-        body: JSON.stringify({ measurement_number: measurementNumber, usage_value: Number(usageValue), amount: Number(amount), status }),
+        body: JSON.stringify({ measurement_number: measurementNumber, usage_value: Number(usageValue) }),
       })
       if (!response.ok) {
         const err = await response.json()
@@ -129,38 +127,6 @@ export default function EditBillForm({ bill, customers }: Props) {
                 <div>
                   <label style={labelStyle}><Gauge size={13} /> Usage (m³)</label>
                   <input type="number" min="0.01" step="0.01" required value={usageValue} onChange={e => setUsageValue(e.target.value)} placeholder="0.00" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-                </div>
-              </div>
-
-              {/* Amount */}
-              <div>
-                <label style={labelStyle}><Banknote size={13} /> Amount (Rp)</label>
-                <input type="number" min="0" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-              </div>
-
-              {/* Status toggle */}
-              <div>
-                <label style={labelStyle}>Payment Status</label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  {[
-                    { val: "pending", label: "Pending", activeColor: "#eab308", activeBg: "rgba(234,179,8,0.1)", activeBorder: "rgba(234,179,8,0.4)" },
-                    { val: "paid",    label: "Paid",    activeColor: "#4ade80", activeBg: "rgba(74,222,128,0.1)", activeBorder: "rgba(74,222,128,0.4)" },
-                  ].map(opt => (
-                    <button key={opt.val} type="button" onClick={() => setStatus(opt.val)}
-                      style={{
-                        padding: "12px", borderRadius: "12px", border: `1px solid ${status === opt.val ? opt.activeBorder : "rgba(255,255,255,0.1)"}`,
-                        background: status === opt.val ? opt.activeBg : "rgba(255,255,255,0.03)",
-                        color: status === opt.val ? opt.activeColor : "rgba(255,255,255,0.4)",
-                        fontSize: "13px", fontWeight: 700, cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                        boxShadow: status === opt.val ? `0 0 14px ${opt.activeBg}` : "none",
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: status === opt.val ? opt.activeColor : "rgba(255,255,255,0.2)", boxShadow: status === opt.val ? `0 0 8px ${opt.activeColor}` : "none", transition: "all 0.2s" }} />
-                      {opt.label}
-                    </button>
-                  ))}
                 </div>
               </div>
 

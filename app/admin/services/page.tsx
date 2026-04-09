@@ -154,11 +154,19 @@ export default async function ServicePage(props: PageProps) {
             </div>
           </div>
 
-          <Link href="/admin/services/add" className="group relative flex items-center gap-3 px-8 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all duration-300 shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(8,145,178,0.5)] overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            <Plus className="w-5 h-5" />
-            <span>Add New Service</span>
+          <Link href="/admin/services/add" style={{ textDecoration: "none" }}>
+            <button style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              padding: "12px 24px", borderRadius: "12px",
+              background: "#38bdf8", color: "#0a0f1e",
+              fontSize: "14px", fontWeight: 700, border: "none", cursor: "pointer",
+              boxShadow: "0 0 20px rgba(56,189,248,0.4)", transition: "all 0.2s",
+            }}>
+              <Plus size={16} />
+              Add New Service
+            </button>
           </Link>
+
         </div>
 
         {/* ── Main Card ── */}

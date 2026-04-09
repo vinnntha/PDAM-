@@ -16,7 +16,9 @@ export interface PaymentData {
   id: number
   bill_id: number
   payment_proof: string
-  status: string
+  verified: boolean
+  total_amount: number
+  payment_date: string
   owner_token: string
   createdAt: string
   updatedAt: string
@@ -25,7 +27,7 @@ export interface PaymentData {
     month: number
     year: number
     usage_value: number
-    payment_status: string
+    paid: boolean
     customer_id: number
     customer?: {
       name: string

@@ -19,7 +19,9 @@ export interface PaymentData {
   id: number
   bill_id: number
   payment_proof: string
-  status: string
+  verified: boolean
+  total_amount: number
+  payment_date: string
   owner_token: string
   createdAt: string
   updatedAt: string
@@ -28,7 +30,7 @@ export interface PaymentData {
     month: number
     year: number
     usage_value: number
-    payment_status: string
+    paid: boolean
   }
 }
 
@@ -49,9 +51,8 @@ async function getPayments(): Promise<PaymentsResponse> {
   }
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const s = status?.toLowerCase()
-  if (s === "verified") return (
+function StatusBadge({ verified }: { verified: boolean }) {
+  if (verified) return (
     <div style={{
       display: "flex", alignItems: "center", gap: "6px",
       padding: "4px 12px", borderRadius: "999px",
@@ -59,10 +60,10 @@ function StatusBadge({ status }: { status: string }) {
       border: "1px solid rgba(74,222,128,0.3)",
     }}>
       <CheckCircle2 size={12} style={{ color: "#4ade80" }} />
-      <span style={{ fontSize: "10px", fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" }}>{status}</span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" }}>VERIFIED</span>
     </div>
   )
-  if (s === "pending") return (
+  return (
     <div style={{
       display: "flex", alignItems: "center", gap: "6px",
       padding: "4px 12px", borderRadius: "999px",
@@ -70,18 +71,7 @@ function StatusBadge({ status }: { status: string }) {
       border: "1px solid rgba(234,179,8,0.3)",
     }}>
       <Clock size={12} style={{ color: "#eab308" }} />
-      <span style={{ fontSize: "10px", fontWeight: 700, color: "#eab308", letterSpacing: "0.1em", textTransform: "uppercase" }}>{status}</span>
-    </div>
-  )
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: "6px",
-      padding: "4px 12px", borderRadius: "999px",
-      background: "rgba(239,68,68,0.08)",
-      border: "1px solid rgba(239,68,68,0.3)",
-    }}>
-      <AlertCircle size={12} style={{ color: "#ef4444" }} />
-      <span style={{ fontSize: "10px", fontWeight: 700, color: "#ef4444", letterSpacing: "0.1em", textTransform: "uppercase" }}>{status}</span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: "#eab308", letterSpacing: "0.1em", textTransform: "uppercase" }}>PENDING</span>
     </div>
   )
 }
@@ -223,15 +213,18 @@ export default async function CustomerPaymentsPage() {
                     }}>
                       <Receipt size={18} style={{ color: "#a855f7" }} />
                     </div>
-                    <StatusBadge status={payment.status} />
+                    <StatusBadge verified={payment.verified} />
                   </div>
 
                   <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: "0 0 4px" }}>
                     Payment #{payment.id}
                   </h3>
-                  <p style={{ fontSize: "10px", fontWeight: 700, color: "rgba(255,255,255,0.3)", margin: "0 0 18px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: "rgba(255,255,255,0.3)", margin: "0", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                     Bill ID: {payment.bill_id}
                   </p>
+                  {payment.total_amount != null && (
+                    <p style={{ margin: "4px 0 18px", fontSize: "13px", color: "#4ade80", fontWeight: 600 }}>Rp {payment.total_amount.toLocaleString("id-ID")}</p>
+                  )}
 
                   <div style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",

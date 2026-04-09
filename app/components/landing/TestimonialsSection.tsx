@@ -1,5 +1,6 @@
 "use client";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, useInView, useMotionValue, useSpring, animate } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 const testis = [
   {
@@ -35,11 +36,76 @@ const testis = [
 ];
 
 const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 60 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
+  },
 };
 
+// ── Animated counter ──────────────────────────────────────────────────────────
+interface StatItem { val: string; label: string; numericEnd: number; suffix: string; decimals?: number }
+
+const stats: StatItem[] = [
+  { val: "4.9/5",  label: "Average Rating",   numericEnd: 4.9,  suffix: "/5",  decimals: 1 },
+  { val: "2,400+", label: "Reviews",           numericEnd: 2400, suffix: "+",  decimals: 0 },
+  { val: "98%",    label: "Satisfaction Rate", numericEnd: 98,   suffix: "%",  decimals: 0 },
+];
+
+function AnimatedStat({ stat, inView }: { stat: StatItem; inView: boolean }) {
+  const [display, setDisplay] = useState("0");
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (!inView || startedRef.current) return;
+    startedRef.current = true;
+
+    const duration = 1800; // ms
+    const startTime = performance.now();
+    const end = stat.numericEnd;
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = eased * end;
+
+      if (stat.decimals && stat.decimals > 0) {
+        setDisplay(current.toFixed(stat.decimals));
+      } else {
+        setDisplay(Math.floor(current).toLocaleString("en-US"));
+      }
+
+      if (progress < 1) requestAnimationFrame(tick);
+      else {
+        // Snap to exact final value
+        if (stat.decimals && stat.decimals > 0) setDisplay(end.toFixed(stat.decimals));
+        else setDisplay(end.toLocaleString("en-US"));
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }, [inView, stat]);
+
+  return (
+    <span style={{
+      fontSize: "22px", fontWeight: 900,
+      color: "#38bdf8", display: "block",
+      textShadow: "0 0 16px rgba(56,189,248,0.4)",
+    }}>
+      {display}{stat.suffix}
+    </span>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function TestimonialSection() {
+  const trustBarRef = useRef<HTMLDivElement>(null);
+  const trustInView = useInView(trustBarRef, { once: true, amount: 0.6 });
+
   return (
     <section
       id="testimonials"
@@ -54,11 +120,11 @@ export default function TestimonialSection() {
     >
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
 
-        {/* Section Header */}
+        {/* Section Header — slides up */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 36 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           viewport={{ once: true }}
           style={{ marginBottom: "56px" }}
         >
@@ -88,12 +154,12 @@ export default function TestimonialSection() {
           </p>
         </motion.div>
 
-        {/* Cards Grid */}
+        {/* Cards Grid — each card slides up with stagger */}
         <motion.div
-          variants={{ show: { transition: { staggerChildren: 0.15 } } }}
+          variants={{ show: { transition: { staggerChildren: 0.18 } } }}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, amount: 0.15 }}
+          viewport={{ once: true, amount: 0.1 }}
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
@@ -151,10 +217,7 @@ export default function TestimonialSection() {
               </div>
 
               {/* Stars */}
-              <div style={{
-                display: "flex", gap: "5px",
-                marginBottom: "16px",
-              }}>
+              <div style={{ display: "flex", gap: "5px", marginBottom: "16px" }}>
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
@@ -189,9 +252,7 @@ export default function TestimonialSection() {
               }} />
 
               {/* Author row */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: "12px",
-              }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 {/* Avatar */}
                 <div style={{
                   width: "40px", height: "40px",
@@ -245,11 +306,12 @@ export default function TestimonialSection() {
           ))}
         </motion.div>
 
-        {/* Trust bar */}
+        {/* Trust bar — slides up + numbers count from 0 */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          ref={trustBarRef}
+          initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
           viewport={{ once: true }}
           style={{
             marginTop: "48px",
@@ -259,27 +321,17 @@ export default function TestimonialSection() {
             gap: "32px",
           }}
         >
-          {[
-            { val: "4.9/5", label: "Average Rating" },
-            { val: "2,400+", label: "Reviews" },
-            { val: "98%", label: "Satisfaction Rate" },
-          ].map(({ val, label }, i) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+          {stats.map((stat, i) => (
+            <div key={stat.label} style={{ display: "flex", alignItems: "center", gap: "32px" }}>
               <div style={{ textAlign: "center" }}>
-                <span style={{
-                  fontSize: "22px", fontWeight: 900,
-                  color: "#38bdf8", display: "block",
-                  textShadow: "0 0 16px rgba(56,189,248,0.4)",
-                }}>
-                  {val}
-                </span>
+                <AnimatedStat stat={stat} inView={trustInView} />
                 <span style={{
                   fontSize: "11px",
                   color: "rgba(255,255,255,0.35)",
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
                 }}>
-                  {label}
+                  {stat.label}
                 </span>
               </div>
               {i < 2 && (

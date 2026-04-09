@@ -2,6 +2,57 @@
 import { motion } from "framer-motion";
 import { Droplet, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+// ── Animated stat counter (fires on mount after a delay) ─────────────────────
+interface HeroStat { v: string; l: string; numericEnd?: number; suffix?: string; decimals?: number; isK?: boolean }
+
+function AnimatedHeroStat({ stat, startDelay }: { stat: HeroStat; startDelay: number }) {
+  const [display, setDisplay] = useState("0");
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (startedRef.current || stat.numericEnd === undefined) return;
+    const timer = setTimeout(() => {
+      startedRef.current = true;
+      const duration = 1600;
+      const startTime = performance.now();
+      const end = stat.numericEnd!;
+
+      function tick(now: number) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        const current = eased * end;
+
+        if (stat.isK) {
+          setDisplay(Math.floor(current / 1000) + "K" + (stat.suffix || ""));
+        } else if (stat.decimals && stat.decimals > 0) {
+          setDisplay(current.toFixed(stat.decimals) + (stat.suffix || ""));
+        } else {
+          setDisplay(Math.floor(current).toLocaleString("en-US") + (stat.suffix || ""));
+        }
+
+        if (progress < 1) requestAnimationFrame(tick);
+        else {
+          if (stat.isK) setDisplay(Math.round(end / 1000) + "K" + (stat.suffix || ""));
+          else if (stat.decimals && stat.decimals > 0) setDisplay(end.toFixed(stat.decimals) + (stat.suffix || ""));
+          else setDisplay(end.toLocaleString("en-US") + (stat.suffix || ""));
+        }
+      }
+      requestAnimationFrame(tick);
+    }, startDelay);
+    return () => clearTimeout(timer);
+  }, [stat, startDelay]);
+
+  // Non-numeric stats display as-is
+  if (stat.numericEnd === undefined) {
+    return <span style={{ fontSize: "26px", fontWeight: 900, color: "#38bdf8", display: "block", lineHeight: 1 }}>{stat.v}</span>;
+  }
+
+  return <span style={{ fontSize: "26px", fontWeight: 900, color: "#38bdf8", display: "block", lineHeight: 1 }}>{display}</span>;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function HeroSection() {
   const scrollTo = (id: string) => {
@@ -159,11 +210,11 @@ export default function HeroSection() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.6 }}
               style={{ display: "flex", gap: "0" }}
             >
-              {[
-                { v: "10K+", l: "Customers" },
+              {([
+                { v: "10K+", l: "Customers", numericEnd: 10000, suffix: "+", isK: true },
                 { v: "24/7", l: "Support" },
-                { v: "99%",  l: "Uptime" },
-              ].map((s, i) => (
+                { v: "99%",  l: "Uptime",    numericEnd: 99,    suffix: "%"  },
+              ] as HeroStat[]).map((s, i) => (
                 <div
                   key={s.l}
                   style={{
@@ -172,9 +223,7 @@ export default function HeroSection() {
                     borderRight: i < 2 ? "1px solid rgba(255,255,255,0.1)" : "none",
                   }}
                 >
-                  <span style={{ fontSize: "26px", fontWeight: 900, color: "#38bdf8", display: "block", lineHeight: 1 }}>
-                    {s.v}
-                  </span>
+                  <AnimatedHeroStat stat={s} startDelay={700 + i * 150} />
                   <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
                     {s.l}
                   </span>

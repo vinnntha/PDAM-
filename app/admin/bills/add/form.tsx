@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { getCookies } from "@/helper/cookies"
 import {
   Receipt, User, Calendar, Droplets,
-  CreditCard, Hash, ArrowLeft, Save, Loader2, AlertCircle,
+  CreditCard, Hash, ArrowLeft, Save, Loader2, Layers,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -47,10 +47,9 @@ const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
 
 export default function AddBillForm({ customers, services }: { customers: Customer[]; services: Service[] }) {
   const [customerId, setCustomerId]               = useState("")
+  const [serviceId, setServiceId]                 = useState("")
   const [measurementNumber, setMeasurementNumber] = useState("")
   const [usageValue, setUsageValue]               = useState("")
-  const [amount, setAmount]                       = useState("")
-  const [status, setStatus]                       = useState("pending")
   const [month, setMonth]                         = useState(String(new Date().getMonth() + 1))
   const [year, setYear]                           = useState(String(currentYear))
   const [isLoading, setIsLoading]                 = useState(false)
@@ -59,22 +58,51 @@ export default function AddBillForm({ customers, services }: { customers: Custom
   const [errorMessage, setErrorMessage]           = useState("")
   const router = useRouter()
 
+  // Auto-fill service when customer is selected
+  const handleCustomerChange = (id: string) => {
+    setCustomerId(id)
+    const customer = customers.find(c => c.id === Number(id))
+    if (customer?.service_id) setServiceId(String(customer.service_id))
+    else setServiceId("")
+  }
+
   const handleAddBill = async (e: React.FormEvent) => {
-    e.preventDefault(); setIsLoading(true)
+    e.preventDefault()
+    if (!serviceId) {
+      setErrorMessage("Please select a service.")
+      setShowError(true)
+      return
+    }
+    setIsLoading(true)
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/bills`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "app-key": process.env.NEXT_PUBLIC_APP_KEY || "", "Authorization": `Bearer ${await getCookies("token")}` },
-        body: JSON.stringify({ customer_id: Number(customerId), measurement_number: measurementNumber, usage_value: Number(usageValue), amount: Number(amount), status, month: Number(month), year: Number(year) }),
+        headers: {
+          "Content-Type": "application/json",
+          "app-key": process.env.NEXT_PUBLIC_APP_KEY || "",
+          "Authorization": `Bearer ${await getCookies("token")}`,
+        },
+        body: JSON.stringify({
+          customer_id:        Number(customerId),
+          service_id:         Number(serviceId),
+          month:              Number(month),
+          year:               Number(year),
+          measurement_number: measurementNumber,
+          usage_value:        Number(usageValue),
+        }),
       })
       if (!response.ok) {
         const err = await response.json()
-        setErrorMessage(err.message || "Failed to add bill"); setShowError(true); setIsLoading(false); return
+        setErrorMessage(err.message || "Failed to add bill")
+        setShowError(true)
+        setIsLoading(false)
+        return
       }
       setShowSuccess(true)
       setTimeout(() => { setShowSuccess(false); router.push("/admin/bills") }, 2000)
     } catch {
-      setErrorMessage("Something went wrong."); setShowError(true)
+      setErrorMessage("Something went wrong.")
+      setShowError(true)
     } finally { setIsLoading(false) }
   }
 
@@ -122,9 +150,23 @@ export default function AddBillForm({ customers, services }: { customers: Custom
               <div>
                 <label style={labelStyle}><User size={13} /> Target Customer</label>
                 <div style={{ position: "relative" }}>
-                  <select required value={customerId} onChange={e => setCustomerId(e.target.value)} style={selectStyle} onFocus={onFocus} onBlur={onBlur}>
+                  <select required value={customerId} onChange={e => handleCustomerChange(e.target.value)} style={selectStyle} onFocus={onFocus} onBlur={onBlur}>
                     <option value="" style={{ background: "#0a0f1e" }}>Select a customer...</option>
                     {customers.map(c => <option key={c.id} value={c.id} style={{ background: "#0a0f1e" }}>{c.name} ({c.customer_number})</option>)}
+                  </select>
+                  <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "rgba(255,255,255,0.3)" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service */}
+              <div>
+                <label style={labelStyle}><Layers size={13} /> Service</label>
+                <div style={{ position: "relative" }}>
+                  <select required value={serviceId} onChange={e => setServiceId(e.target.value)} style={selectStyle} onFocus={onFocus} onBlur={onBlur}>
+                    <option value="" style={{ background: "#0a0f1e" }}>Select a service...</option>
+                    {services.map(s => <option key={s.id} value={s.id} style={{ background: "#0a0f1e" }}>{s.name} — Rp {s.price?.toLocaleString("id-ID")}</option>)}
                   </select>
                   <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "rgba(255,255,255,0.3)" }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 9l-7 7-7-7" /></svg>
@@ -141,26 +183,6 @@ export default function AddBillForm({ customers, services }: { customers: Custom
                 <div>
                   <label style={labelStyle}><Droplets size={13} /> Usage (m³)</label>
                   <input type="number" min="0.01" step="0.01" required value={usageValue} onChange={e => setUsageValue(e.target.value)} placeholder="0.00" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-                </div>
-              </div>
-
-              {/* Amount + Status */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <div>
-                  <label style={labelStyle}><CreditCard size={13} /> Amount (Rp)</label>
-                  <input type="number" min="0" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-                </div>
-                <div>
-                  <label style={labelStyle}><AlertCircle size={13} /> Payment Status</label>
-                  <div style={{ position: "relative" }}>
-                    <select value={status} onChange={e => setStatus(e.target.value)} style={selectStyle} onFocus={onFocus} onBlur={onBlur}>
-                      <option value="pending" style={{ background: "#0a0f1e" }}>Pending</option>
-                      <option value="paid" style={{ background: "#0a0f1e" }}>Paid</option>
-                    </select>
-                    <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "rgba(255,255,255,0.3)" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 9l-7 7-7-7" /></svg>
-                    </div>
-                  </div>
                 </div>
               </div>
 

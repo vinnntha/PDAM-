@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Droplet, User, Lock, Phone, Eye, EyeOff, UserCheck, ArrowLeft } from "lucide-react";
+import { Droplet, User, Lock, Phone, Eye, EyeOff, UserCheck, ArrowLeft, Fingerprint, MapPin } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 
 export default function SignUpPage() {
@@ -11,6 +11,8 @@ export default function SignUpPage() {
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
+  const [customerNumber, setCustomerNumber] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
@@ -23,10 +25,13 @@ export default function SignUpPage() {
         const request = JSON.stringify({
           username,
           password,
-          phone,
+          customer_number: customerNumber,
+          address,
           name,
+          phone,
+          service_id: 573, // Default service ID to bypass backend validation requirement
         });
-        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/admins`;
+        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/customers`;
         const response = await fetch(url, {
           method: "POST",
           headers: {
@@ -38,7 +43,7 @@ export default function SignUpPage() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          toast.error(errorData.message || "Failed to register admin", { containerId: "toastSignUp" });
+          toast.error(errorData.message || "Failed to register customer", { containerId: "toastSignUp" });
           return;
         }
 
@@ -146,7 +151,7 @@ export default function SignUpPage() {
               color: "rgba(255,255,255,0.4)",
               margin: 0,
             }}>
-              Create your administrator account
+              Create your customer account
             </p>
           </div>
 
@@ -202,6 +207,15 @@ export default function SignUpPage() {
                 icon={<User size={16} />}
               />
 
+              {/* Customer Number field */}
+              <Input
+                label="National ID (NIK)"
+                value={customerNumber}
+                onChange={e => setCustomerNumber(e.target.value)}
+                placeholder="16-digit identity number"
+                icon={<Fingerprint size={16} />}
+              />
+
               {/* Phone field */}
               <Input
                 label="Phone Number"
@@ -209,6 +223,15 @@ export default function SignUpPage() {
                 onChange={e => setPhone(e.target.value)}
                 placeholder="08xxxxxxxxxx"
                 icon={<Phone size={16} />}
+              />
+
+              {/* Address field */}
+              <Input
+                label="Detailed Address"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="Full residential or property address"
+                icon={<MapPin size={16} />}
               />
 
               {/* Submit button */}

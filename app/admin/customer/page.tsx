@@ -158,7 +158,7 @@ export default async function customersPage(props: {
         bottom: "-100px", left: "-100px",
         background: "rgba(16,185,129,0.06)", filter: "blur(100px)", pointerEvents: "none",
       }} />
-      
+
       {/* Grid Overlay */}
       <div style={{
         position: "absolute", inset: 0, opacity: 0.03, pointerEvents: "none",
@@ -197,13 +197,17 @@ export default async function customersPage(props: {
             </div>
           </div>
 
-          <Link
-            href="/admin/customer/add"
-            className="group relative flex items-center gap-3 px-8 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-bold transition-all duration-300 shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(8,145,178,0.5)] overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            <Plus className="w-5 h-5" />
-            <span>Register New Customer</span>
+          <Link href="/admin/customer/add" style={{ textDecoration: "none" }}>
+            <button style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              padding: "12px 24px", borderRadius: "12px",
+              background: "#38bdf8", color: "#0a0f1e",
+              fontSize: "14px", fontWeight: 700, border: "none", cursor: "pointer",
+              boxShadow: "0 0 20px rgba(56,189,248,0.4)", transition: "all 0.2s",
+            }}>
+              <Plus size={16} />
+              Regist New Customer
+            </button>
           </Link>
         </div>
 
@@ -218,7 +222,7 @@ export default async function customersPage(props: {
             position: "absolute", top: 0, left: 0, right: 0, height: "2px",
             background: "linear-gradient(90deg, #38bdf8, #4ade80, transparent)",
           }} />
-          
+
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
             <Filter size={16} style={{ color: "#4ade80" }} />
             <h2 style={{
@@ -326,14 +330,14 @@ export default async function customersPage(props: {
                     </div>
                   </div>
                   <div style={{ marginTop: "8px", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                     <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Service Plan</span>
-                     <span style={{ 
-                       padding: "3px 8px", borderRadius: "6px",
-                       background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.15)",
-                       fontSize: "11px", fontWeight: 700, color: "#38bdf8"
-                     }}>
-                        {customer.service?.name || "Standard"}
-                     </span>
+                    <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Service Plan</span>
+                    <span style={{
+                      padding: "3px 8px", borderRadius: "6px",
+                      background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.15)",
+                      fontSize: "11px", fontWeight: 700, color: "#38bdf8"
+                    }}>
+                      {customer.service?.name || "Standard"}
+                    </span>
                   </div>
                 </div>
 

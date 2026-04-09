@@ -47,7 +47,7 @@ export default function BillCard({ bill }: { bill: BillData }) {
         }}>
           <User size={18} style={{ color: "#38bdf8" }} />
         </div>
-        <StatusBadge status={bill.status} />
+        <StatusBadge status={bill.status ?? "unknown"} />
       </div>
 
       {/* Customer name */}
@@ -90,7 +90,7 @@ export default function BillCard({ bill }: { bill: BillData }) {
             <Droplets size={12} style={{ color: "#38bdf8" }} />
             <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.08em" }}>Usage</span>
           </div>
-          <span style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>{bill.usage} m³</span>
+          <span style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>{bill.usage_value} m³</span>
         </div>
         <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
@@ -141,7 +141,7 @@ export default function BillCard({ bill }: { bill: BillData }) {
 }
 
 // StatusBadge stays here since it's used by BillCard (client component)
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status: string | undefined }) {
   const s = status?.toLowerCase()
   if (s === "paid") return (
     <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 12px", borderRadius: "999px", background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.3)" }}>
