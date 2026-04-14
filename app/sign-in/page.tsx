@@ -17,8 +17,8 @@ export interface LoginResponse {
 }
 
 export default function SignInPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("admin-banana");
+  const [password, setPassword] = useState("12345");
   const [showPassword, setShowPassword] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();

@@ -64,7 +64,6 @@ def find_runs(workspace: Path) -> list[dict]:
     runs.sort(key=lambda r: (r.get("eval_id", float("inf")), r["id"]))
     return runs
 
-
 def _find_runs_recursive(root: Path, current: Path, runs: list[dict]) -> None:
     if not current.is_dir():
         return
