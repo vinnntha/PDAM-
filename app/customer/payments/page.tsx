@@ -1,5 +1,6 @@
 import { getCookies } from "@/helper/cookies"
 import Link from "next/link"
+import ProofModal from "./ProofModal"
 import {
   Plus, Receipt, User, Calendar, Droplets,
   CreditCard, Hash, Filter, Search as SearchIcon,
@@ -243,17 +244,7 @@ export default async function CustomerPaymentsPage() {
 
                   {/* Actions */}
                   <div style={{ display: "flex", gap: "10px" }}>
-                    <a href={`${process.env.NEXT_PUBLIC_BASE_URL}/payment-proof/${payment.payment_proof}`} target="_blank" rel="noreferrer" style={{ flex: 1, textDecoration: "none" }}>
-                      <button style={{
-                        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                        padding: "10px", borderRadius: "10px",
-                        background: "rgba(168,85,247,0.07)", border: "1px solid rgba(168,85,247,0.2)",
-                        color: "#a855f7", fontSize: "13px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
-                      }}>
-                        <ImageIcon size={14} />
-                        View Proof
-                      </button>
-                    </a>
+                    <ProofModal proofUrl={`${process.env.NEXT_PUBLIC_BASE_URL}/payment-proof/${payment.payment_proof}`} />
                   </div>
                 </div>
               ))}

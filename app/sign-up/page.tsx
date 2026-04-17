@@ -47,11 +47,11 @@ export default function SignUpPage() {
         const request = JSON.stringify({
           username,
           password,
+          phone,
+          name,
           customer_number: customerNumber,
           address,
-          name,
-          phone,
-          service_id: parseInt(serviceId) || 1143,
+          service_id: 1, // Default service id
         });
         const url = `${process.env.NEXT_PUBLIC_BASE_URL}/customers`;
         const response = await fetch(url, {
@@ -229,15 +229,6 @@ export default function SignUpPage() {
                 icon={<User size={16} />}
               />
 
-              {/* Customer Number field */}
-              <Input
-                label="National ID (NIK)"
-                value={customerNumber}
-                onChange={e => setCustomerNumber(e.target.value)}
-                placeholder="16-digit identity number"
-                icon={<Fingerprint size={16} />}
-              />
-
               {/* Phone field */}
               <Input
                 label="Phone Number"
@@ -245,6 +236,15 @@ export default function SignUpPage() {
                 onChange={e => setPhone(e.target.value)}
                 placeholder="08xxxxxxxxxx"
                 icon={<Phone size={16} />}
+              />
+
+              {/* NIK field */}
+              <Input
+                label="National ID (NIK)"
+                value={customerNumber}
+                onChange={e => setCustomerNumber(e.target.value)}
+                placeholder="16-digit identity number"
+                icon={<UserCheck size={16} />}
               />
 
               {/* Address field */}
