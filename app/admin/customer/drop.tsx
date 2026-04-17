@@ -3,6 +3,7 @@
 import { getCookies } from "@/helper/cookies";
 import { useRouter } from "next/dist/client/components/navigation";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Trash2, AlertTriangle, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 export default function DropCustomerButton({
@@ -91,7 +92,7 @@ export default function DropCustomerButton({
             </button>
 
             {/* Confirmation Modal */}
-            {showConfirm && (
+            {showConfirm && typeof document !== 'undefined' && createPortal(
                 <div style={{
                     position: "fixed",
                     top: 0, left: 0, right: 0, bottom: 0,
@@ -167,10 +168,10 @@ export default function DropCustomerButton({
                         </div>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* Success Overlay */}
-            {showSuccess && (
+            {showSuccess && typeof document !== 'undefined' && createPortal(
                 <div style={{
                     position: "fixed",
                     top: 0, left: 0, right: 0, bottom: 0,
@@ -203,10 +204,10 @@ export default function DropCustomerButton({
                         </p>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* Error Modal */}
-            {showError && (
+            {showError && typeof document !== 'undefined' && createPortal(
                 <div style={{
                     position: "fixed",
                     top: 0, left: 0, right: 0, bottom: 0,
@@ -246,7 +247,7 @@ export default function DropCustomerButton({
                         </button>
                     </div>
                 </div>
-            )}
+            , document.body)}
         </> 
     )
 }

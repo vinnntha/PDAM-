@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Droplet, User, Lock, Phone, Eye, EyeOff, UserCheck, ArrowLeft, Fingerprint, MapPin } from "lucide-react";
@@ -13,10 +13,32 @@ export default function SignUpPage() {
   const [phone, setPhone] = useState<string>("");
   const [customerNumber, setCustomerNumber] = useState<string>("");
   const [address, setAddress] = useState<string>("");
+  const [serviceId, ] = useState<string>("");
+  const [services, setServices] = useState<any[]>([]);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/services`;
+        const response = await fetch(url, {
+          headers: {
+            "app-key": process.env.NEXT_PUBLIC_APP_KEY || ""
+          }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          setServices(result.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch services", error);
+      }
+    }
+    fetchServices();
+  }, []);
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +51,7 @@ export default function SignUpPage() {
           address,
           name,
           phone,
-          service_id: 573, // Default service ID to bypass backend validation requirement
+          service_id: parseInt(serviceId) || 1143,
         });
         const url = `${process.env.NEXT_PUBLIC_BASE_URL}/customers`;
         const response = await fetch(url, {

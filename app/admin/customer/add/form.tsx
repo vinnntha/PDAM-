@@ -253,7 +253,7 @@ export default function AddCustomer({ services }: any) {
                   type="text" required value={phone}
                   onFocus={() => setFocusedField("phone")} onBlur={() => setFocusedField(null)}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+62 8xx..."
+                  placeholder="08xx..."
                   style={inputStyle("phone")}
                 />
               </div>
